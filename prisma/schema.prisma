@@ -1,0 +1,156 @@
+// Schema do banco - Ferramenta de Orçamentos D'Classe Papéis
+// Valores monetários são armazenados em CENTAVOS (Int) para evitar
+// problemas de arredondamento com ponto flutuante. Ex: R$ 12,34 => 1234.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ------------------------------------------------------------------
+// Representante: identificação simples por nome, sem senha (fase 1)
+// ------------------------------------------------------------------
+model Representante {
+  id         String   @id @default(cuid())
+  nome       String   @unique
+  criadoEm   DateTime @default(now())
+
+  clientes   Cliente[]
+  orcamentos Orcamento[]
+
+  @@map("representantes")
+}
+
+// ------------------------------------------------------------------
+// Cliente: cada representante só vê os clientes que ele cadastrou
+// ------------------------------------------------------------------
+model Cliente {
+  id                String   @id @default(cuid())
+  representanteId   String
+  representante     Representante @relation(fields: [representanteId], references: [id])
+
+  razaoSocial       String
+  nomeFantasia      String?
+  cnpj              String
+  inscricaoEstadual String?
+
+  endereco          String?
+  bairro            String?
+  cep               String?
+  municipio         String?
+  uf                String?
+
+  telefone          String?
+  email             String?
+
+  criadoEm          DateTime @default(now())
+  atualizadoEm      DateTime @updatedAt
+
+  orcamentos        Orcamento[]
+
+  // Um mesmo representante não cadastra o mesmo CNPJ duas vezes
+  @@unique([representanteId, cnpj])
+  @@index([representanteId])
+  @@map("clientes")
+}
+
+// ------------------------------------------------------------------
+// Produto: catálogo compartilhado entre todos os representantes
+// ------------------------------------------------------------------
+model Produto {
+  codigo         String   @id
+  descricao      String
+  categoria      String
+  ncm            String?
+  unidade        String? // não veio na planilha original; preencher depois
+  codigoBarras   String?
+  imagemUrl      String? // ex: /produtos/1078.jpg
+
+  // preços em centavos
+  precoTabelaA   Int      @default(0)
+  precoTabelaB   Int      @default(0)
+
+  ipiPercentual  Float?   @default(0)
+
+  ativo          Boolean  @default(true)
+  criadoEm       DateTime @default(now())
+  atualizadoEm   DateTime @updatedAt
+
+  itens          ItemOrcamento[]
+
+  @@index([categoria])
+  @@map("produtos")
+}
+
+// ------------------------------------------------------------------
+// Orcamento: o "id" numérico serve como número do orçamento no PDF
+// ------------------------------------------------------------------
+model Orcamento {
+  id                 Int      @id @default(autoincrement())
+
+  clienteId          String
+  cliente            Cliente       @relation(fields: [clienteId], references: [id])
+  representanteId    String
+  representante      Representante @relation(fields: [representanteId], references: [id])
+
+  data               DateTime @default(now())
+
+  itens              ItemOrcamento[]
+
+  // valores em centavos
+  valorProdutos      Int      @default(0) // soma dos itens antes de desconto/impostos/frete
+  descontoPercentual Float?
+  descontoValor      Int      @default(0)
+  ipiValor           Int      @default(0)
+  stValor            Int      @default(0)
+  freteValor         Int      @default(0)
+  valorTotal         Int      @default(0) // valorProdutos - descontoValor + ipiValor + stValor + freteValor
+
+  // outras informações (bloco do PDF)
+  previsaoEntrega    String?
+  ordemCompra        String?
+  fretePorConta      String?
+  condicaoPagamento  String?
+  formaPagamento     String?
+  transportadora     String?
+  volumes            Int?
+  pesoBruto          Float?
+  observacoes        String?
+  emailCopiaPedido   String?
+  emailXmlNfe        String?
+
+  criadoEm           DateTime @default(now())
+  atualizadoEm       DateTime @updatedAt
+
+  @@index([clienteId])
+  @@index([representanteId])
+  @@map("orcamentos")
+}
+
+// ------------------------------------------------------------------
+// ItemOrcamento: guarda "snapshot" de descrição/preço no momento da
+// venda, para o orçamento não mudar se o produto for atualizado depois
+// ------------------------------------------------------------------
+model ItemOrcamento {
+  id             String   @id @default(cuid())
+
+  orcamentoId    Int
+  orcamento      Orcamento @relation(fields: [orcamentoId], references: [id], onDelete: Cascade)
+
+  produtoCodigo  String
+  produto        Produto  @relation(fields: [produtoCodigo], references: [codigo])
+
+  descricao      String   // snapshot
+  quantidade     Int
+  tabelaUsada    String   // "A" ou "B", escolhida por item
+  valorUnitario  Int      // centavos, snapshot do preço da tabela usada
+  ipiPercentual  Float?   @default(0)
+  valorTotal     Int      // centavos = quantidade * valorUnitario
+
+  @@index([orcamentoId])
+  @@map("itens_orcamento")
+}

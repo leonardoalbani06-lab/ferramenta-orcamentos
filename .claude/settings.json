@@ -1,0 +1,35 @@
+{
+  "hooks": {
+    "PreCompact": [
+      {
+        "matcher": "manual",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"C:\\Program Files\\Git\\usr\\bin\\bash.exe\" -l \"${CLAUDE_PROJECT_DIR}/.claude/hooks/backup-before-compact.sh\""
+          }
+        ]
+      },
+      {
+        "matcher": "auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"C:\\Program Files\\Git\\usr\\bin\\bash.exe\" -l \"${CLAUDE_PROJECT_DIR}/.claude/hooks/backup-before-compact.sh\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"C:\\Program Files\\Git\\usr\\bin\\bash.exe\" -l \"${CLAUDE_PROJECT_DIR}/.claude/hooks/remind-update-context.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,512 @@
+[
+  {
+    "codigo": "1051",
+    "descricao": "Papel Toalha Olivapel 100% 16x02x50",
+    "categoria": "Linha Olivapel",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 4304,
+    "precoTabelaB": 4433,
+    "imagemUrl": "/produtos/1051.jpg"
+  },
+  {
+    "codigo": "1080",
+    "descricao": "Guardanapo de Papel 22x22cm c/50un - fardo c/50",
+    "categoria": "Linha Olivapel",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 5450,
+    "precoTabelaB": 6438,
+    "imagemUrl": "/produtos/1080.jpg"
+  },
+  {
+    "codigo": "1075",
+    "descricao": "Interfolha 7x1000x20x20 100% celulose luxo 18gr premium",
+    "categoria": "Linha Olivapel",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 6643,
+    "precoTabelaB": 7203,
+    "imagemUrl": "/produtos/1075.jpg"
+  },
+  {
+    "codigo": "2707",
+    "descricao": "Papel Toalha Interfolha 2.000 flha 20.5x20cm 20gr",
+    "categoria": "Linha Olivapel",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 3502,
+    "precoTabelaB": 3502,
+    "imagemUrl": "/produtos/2707.jpg"
+  },
+  {
+    "codigo": "1304",
+    "descricao": "Papel Interfolha 2.400 flha 20.5x20cm 24gr",
+    "categoria": "Linha Olivapel",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 5105,
+    "precoTabelaB": 5105,
+    "imagemUrl": "/produtos/1304.jpg"
+  },
+  {
+    "codigo": "0106",
+    "descricao": "Papel Toalha Interfolha 4.800 flha 20.5x20cm 20gr",
+    "categoria": "Linha Olivapel",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 7918,
+    "precoTabelaB": 7918,
+    "imagemUrl": "/produtos/0106.jpg"
+  },
+  {
+    "codigo": "2108",
+    "descricao": "Papel Toalha Interfolha Cai Cai 10.000 flha 10x20cm 17gr",
+    "categoria": "Linha Olivapel",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 5655,
+    "precoTabelaB": 5655,
+    "imagemUrl": "/produtos/2108.jpg"
+  },
+  {
+    "codigo": "1605",
+    "descricao": "Papel Higienico Folha Dupla 8 rolos x240m x10cm",
+    "categoria": "Linha Olivapel",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 7990,
+    "precoTabelaB": 8230,
+    "imagemUrl": "/produtos/1605.jpg"
+  },
+  {
+    "codigo": "1065",
+    "descricao": "Papel Higienico Folha Dupla 8 rolos x240m x10cm em fardo",
+    "categoria": "Linha Olivapel",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 6990,
+    "precoTabelaB": 7200,
+    "imagemUrl": null
+  },
+  {
+    "codigo": "0701",
+    "descricao": "Papel Higienico D'Classe 32 rolos de 60m",
+    "categoria": "Linha Olivapel",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 3250,
+    "precoTabelaB": 3450,
+    "imagemUrl": "/produtos/0701.jpg"
+  },
+  {
+    "codigo": "1060",
+    "descricao": "Rolao Higienico 1x8x300m Branco Luxo",
+    "categoria": "Rolão Higiênico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 3450,
+    "precoTabelaB": 3636,
+    "imagemUrl": "/produtos/1060.jpg"
+  },
+  {
+    "codigo": "1061",
+    "descricao": "Rolao Higienico 1x8x300m 100% Celulose",
+    "categoria": "Rolão Higiênico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 4980,
+    "precoTabelaB": 5346,
+    "imagemUrl": "/produtos/1061.jpg"
+  },
+  {
+    "codigo": "1062",
+    "descricao": "Rolao Higienico 1x8x150m Branco Luxo",
+    "categoria": "Rolão Higiênico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 2690,
+    "precoTabelaB": 2890,
+    "imagemUrl": "/produtos/1062.jpg"
+  },
+  {
+    "codigo": "1062/1",
+    "descricao": "Rolao Higienico 1x8x170m Branco Luxo",
+    "categoria": "Rolão Higiênico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 2850,
+    "precoTabelaB": 3050,
+    "imagemUrl": "/produtos/1062-1.jpg"
+  },
+  {
+    "codigo": "1062/2",
+    "descricao": "Rolao Higienico 1x8x200m Branco Luxo",
+    "categoria": "Rolão Higiênico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 3050,
+    "precoTabelaB": 3250,
+    "imagemUrl": "/produtos/1062-2.jpg"
+  },
+  {
+    "codigo": "1063",
+    "descricao": "Rolao Higienico 1x8x150m 100% Celulose",
+    "categoria": "Rolão Higiênico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 3310,
+    "precoTabelaB": 3481,
+    "imagemUrl": "/produtos/1063.jpg"
+  },
+  {
+    "codigo": "1063/1",
+    "descricao": "Rolao Higienico 1x8x170m 100% Celulose",
+    "categoria": "Rolão Higiênico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 3510,
+    "precoTabelaB": 3682,
+    "imagemUrl": "/produtos/1063-1.jpg"
+  },
+  {
+    "codigo": "1063/2",
+    "descricao": "Rolao Higienico 1x8x200m 100% Celulose",
+    "categoria": "Rolão Higiênico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 3710,
+    "precoTabelaB": 3888,
+    "imagemUrl": "/produtos/1063-2.jpg"
+  },
+  {
+    "codigo": "1064",
+    "descricao": "Rolao Higienico Branco Luxo 8x10x500m",
+    "categoria": "Rolão Higiênico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 5696,
+    "precoTabelaB": 5990,
+    "imagemUrl": "/produtos/1064.jpg"
+  },
+  {
+    "codigo": "1070",
+    "descricao": "Rolao Higienico 1x8x300m 100% Celulose Premium (10cm)",
+    "categoria": "Rolão Higiênico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 4954,
+    "precoTabelaB": 5341,
+    "imagemUrl": "/produtos/1070.jpg"
+  },
+  {
+    "codigo": "1071",
+    "descricao": "Rolao Higienico 1x8x300m 100% Celulose Premium (9cm)",
+    "categoria": "Rolão Higiênico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 4644,
+    "precoTabelaB": 5057,
+    "imagemUrl": null
+  },
+  {
+    "codigo": "1070/1",
+    "descricao": "Rolao Higienico 1x8x300/250m 100% Celulose Premium (10cm)",
+    "categoria": "Rolão Higiênico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 4350,
+    "precoTabelaB": 4650,
+    "imagemUrl": "/produtos/1070-1.jpg"
+  },
+  {
+    "codigo": "1053",
+    "descricao": "Interfolhas 6x1000x20x20 Branco Luxo",
+    "categoria": "Interfolhas",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 4794,
+    "precoTabelaB": 5110,
+    "imagemUrl": null
+  },
+  {
+    "codigo": "1054",
+    "descricao": "Interfolhas 6x1000x20x20 100% Celulose Eco 20gr",
+    "categoria": "Interfolhas",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 5934,
+    "precoTabelaB": 6300,
+    "imagemUrl": "/produtos/1054.jpg"
+  },
+  {
+    "codigo": "1055",
+    "descricao": "Interfolhas 6x600x20x20 Branco Luxo",
+    "categoria": "Interfolhas",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 3718,
+    "precoTabelaB": 4130,
+    "imagemUrl": "/produtos/1055.jpg"
+  },
+  {
+    "codigo": "1056",
+    "descricao": "Interfolhas 7x600x20x20 100% Celulose Eco",
+    "categoria": "Interfolhas",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 5530,
+    "precoTabelaB": 5943,
+    "imagemUrl": "/produtos/1056.jpg"
+  },
+  {
+    "codigo": "1076",
+    "descricao": "Interfolhas 6x500gr x20x20 100% Celulose Eco 18gr",
+    "categoria": "Interfolhas",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 4740,
+    "precoTabelaB": 5094,
+    "imagemUrl": null
+  },
+  {
+    "codigo": "VER-24",
+    "descricao": "Interfolhas 6x1000x20x20 100% Celulose Eco 70/30 24gr",
+    "categoria": "Interfolhas",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 7170,
+    "precoTabelaB": 7354,
+    "imagemUrl": null
+  },
+  {
+    "codigo": "VER-28",
+    "descricao": "Interfolha 6x1000x20x20 100% Celulose Luxo 70/30 28gr",
+    "categoria": "Interfolhas",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 7925,
+    "precoTabelaB": 8590,
+    "imagemUrl": null
+  },
+  {
+    "codigo": "1052",
+    "descricao": "Toalha Auto Corte VIP (Branca 1) 1x6x200m 24gr",
+    "categoria": "Bobinas Toalhas Auto Corte",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 6819,
+    "precoTabelaB": 6937,
+    "imagemUrl": null
+  },
+  {
+    "codigo": "1078",
+    "descricao": "Toalha Auto Corte (Branca 2) 1x6x200m 28gr",
+    "categoria": "Bobinas Toalhas Auto Corte",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 4950,
+    "precoTabelaB": 5450,
+    "imagemUrl": null
+  },
+  {
+    "codigo": "1078/1",
+    "descricao": "Toalha Auto Corte (Branca 2) 1x6x150m 28gr",
+    "categoria": "Bobinas Toalhas Auto Corte",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 4195,
+    "precoTabelaB": 4395,
+    "imagemUrl": null
+  },
+  {
+    "codigo": "1072",
+    "descricao": "Toalha Auto Corte Premium 1x6x200m Alavanca",
+    "categoria": "Bobinas Toalhas Auto Corte",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 5809,
+    "precoTabelaB": 6221,
+    "imagemUrl": "/produtos/1072.jpg"
+  },
+  {
+    "codigo": "1073",
+    "descricao": "Toalha Auto Corte Premium 1x6x200m Confort",
+    "categoria": "Bobinas Toalhas Auto Corte",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 7148,
+    "precoTabelaB": 7395,
+    "imagemUrl": "/produtos/1073.jpg"
+  },
+  {
+    "codigo": "1074",
+    "descricao": "Toalha Auto Corte Premium 1x6x200m Premium",
+    "categoria": "Bobinas Toalhas Auto Corte",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 8106,
+    "precoTabelaB": 8588,
+    "imagemUrl": "/produtos/1074.jpg"
+  },
+  {
+    "codigo": "1072/1",
+    "descricao": "Toalha Auto Corte Premium 1x6x150m Alavanca",
+    "categoria": "Bobinas Toalhas Auto Corte",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 5006,
+    "precoTabelaB": 5366,
+    "imagemUrl": "/produtos/1072-1.jpg"
+  },
+  {
+    "codigo": "1073/1",
+    "descricao": "Toalha Auto Corte Premium 1x6x150m Confort",
+    "categoria": "Bobinas Toalhas Auto Corte",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 5850,
+    "precoTabelaB": 6242,
+    "imagemUrl": "/produtos/1073-1.jpg"
+  },
+  {
+    "codigo": "1074/1",
+    "descricao": "Toalha Auto Corte Premium 1x6x150m Premium",
+    "categoria": "Bobinas Toalhas Auto Corte",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 6488,
+    "precoTabelaB": 6887,
+    "imagemUrl": "/produtos/1074-1.jpg"
+  },
+  {
+    "codigo": "1001",
+    "descricao": "D'Classe 16x04x30",
+    "categoria": "Higiênico Doméstico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 4865,
+    "precoTabelaB": 4856,
+    "imagemUrl": "/produtos/1001.jpg"
+  },
+  {
+    "codigo": "1002",
+    "descricao": "D'Classe 16x04x60",
+    "categoria": "Higiênico Doméstico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 6590,
+    "precoTabelaB": 6790,
+    "imagemUrl": "/produtos/1002.jpg"
+  },
+  {
+    "codigo": "1003",
+    "descricao": "D'Classe 16x04x90",
+    "categoria": "Higiênico Doméstico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 8369,
+    "precoTabelaB": 8717,
+    "imagemUrl": "/produtos/1003.jpg"
+  },
+  {
+    "codigo": "1004",
+    "descricao": "D'Classe 04x16x60",
+    "categoria": "Higiênico Doméstico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 6300,
+    "precoTabelaB": 6374,
+    "imagemUrl": "/produtos/1004.jpg"
+  },
+  {
+    "codigo": "1005",
+    "descricao": "D'Classe 06x12x60",
+    "categoria": "Higiênico Doméstico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 6540,
+    "precoTabelaB": 6740,
+    "imagemUrl": "/produtos/1005.jpg"
+  },
+  {
+    "codigo": "1014",
+    "descricao": "D'Classe 06x12x30",
+    "categoria": "Higiênico Doméstico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 4794,
+    "precoTabelaB": 4994,
+    "imagemUrl": "/produtos/1014.jpg"
+  },
+  {
+    "codigo": "1012/1013",
+    "descricao": "D'Classe 09x16x30",
+    "categoria": "Higiênico Doméstico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 8783,
+    "precoTabelaB": 9038,
+    "imagemUrl": "/produtos/1012-1013.jpg"
+  },
+  {
+    "codigo": "1030",
+    "descricao": "Folha Dupla 100% Celulose 16x04x30",
+    "categoria": "Higiênico Doméstico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 8003,
+    "precoTabelaB": 8342,
+    "imagemUrl": "/produtos/1030.jpg"
+  },
+  {
+    "codigo": "1037",
+    "descricao": "Folha Dupla 100% Celulose 06x12x30",
+    "categoria": "Higiênico Doméstico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 8600,
+    "precoTabelaB": 8750,
+    "imagemUrl": "/produtos/1037.jpg"
+  },
+  {
+    "codigo": "1031",
+    "descricao": "VIP Folha Dupla 16x04x30",
+    "categoria": "Higiênico Doméstico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 6384,
+    "precoTabelaB": 6490,
+    "imagemUrl": "/produtos/1031.jpg"
+  },
+  {
+    "codigo": "1032",
+    "descricao": "VIP Folha Dupla 06x12x20",
+    "categoria": "Higiênico Doméstico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 5490,
+    "precoTabelaB": 5697,
+    "imagemUrl": "/produtos/1032.jpg"
+  },
+  {
+    "codigo": "1033",
+    "descricao": "VIP Folha Dupla 06x12x30",
+    "categoria": "Higiênico Doméstico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 6560,
+    "precoTabelaB": 6819,
+    "imagemUrl": "/produtos/1033.jpg"
+  },
+  {
+    "codigo": "1050",
+    "descricao": "Papel Toalha D'Classe 100% 16x04x60",
+    "categoria": "Higiênico Doméstico",
+    "ncm": null,
+    "unidade": null,
+    "precoTabelaA": 6667,
+    "precoTabelaB": 6882,
+    "imagemUrl": "/produtos/1050.jpg"
+  }
+]
