@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { criarOrcamento } from "../../../actions";
 import { formatMoney } from "@/lib/format";
 import { ProdutoThumb } from "@/components/ProdutoThumb";
@@ -388,12 +389,12 @@ export function OrcamentoBuilder({
         >
           Salvar orçamento
         </button>
-        <a
+        <Link
           href="/orcamentos"
           className="rounded-lg px-4 py-2.5 text-gray-600 transition hover:text-brand-olive hover:underline"
         >
           Cancelar
-        </a>
+        </Link>
       </div>
 
       {/* Mobile: barra de ação fixa, acima do BottomNav */}
