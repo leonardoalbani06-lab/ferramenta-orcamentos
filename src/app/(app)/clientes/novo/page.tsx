@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { criarCliente } from "../../../actions";
 
 export default async function NovoClientePage({
@@ -16,9 +17,10 @@ export default async function NovoClientePage({
       )}
 
       <form action={criarCliente} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Campo label="Código do cliente *" name="codigoCliente" required />
+        <Campo label="CNPJ *" name="cnpj" required />
         <Campo label="Razão social *" name="razaoSocial" required className="sm:col-span-2" />
         <Campo label="Nome fantasia" name="nomeFantasia" className="sm:col-span-2" />
-        <Campo label="CNPJ *" name="cnpj" required />
         <Campo label="Inscrição estadual" name="inscricaoEstadual" />
         <Campo label="Endereço" name="endereco" className="sm:col-span-2" />
         <Campo label="Bairro" name="bairro" />
@@ -35,12 +37,12 @@ export default async function NovoClientePage({
           >
             Salvar
           </button>
-          <a
+          <Link
             href="/clientes"
             className="rounded-lg px-4 py-2.5 text-gray-600 transition hover:text-brand-olive hover:underline"
           >
             Cancelar
-          </a>
+          </Link>
         </div>
       </form>
     </main>

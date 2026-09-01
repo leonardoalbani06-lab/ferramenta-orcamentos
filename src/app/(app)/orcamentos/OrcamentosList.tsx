@@ -17,7 +17,8 @@ export function OrcamentosList({ orcamentos }: { orcamentos: OrcamentoComCliente
       (o) =>
         contemBuscaNumerica(o.id, busca) ||
         contemBusca(o.cliente.razaoSocial, busca) ||
-        contemBusca(o.cliente.nomeFantasia, busca)
+        contemBusca(o.cliente.nomeFantasia, busca) ||
+        contemBusca(o.cliente.codigoCliente, busca)
     );
   }, [orcamentos, busca]);
 
@@ -60,7 +61,13 @@ export function OrcamentosList({ orcamentos }: { orcamentos: OrcamentoComCliente
                   <p className="font-medium text-brand-olive">Orçamento nº {o.id}</p>
                   <p className="font-medium text-brand-olive">{formatMoney(o.valorTotal)}</p>
                 </div>
-                <p className="text-sm text-gray-600">{o.cliente.razaoSocial}</p>
+                <p className="text-sm text-gray-600">
+                  {o.cliente.nomeFantasia || o.cliente.razaoSocial}
+                </p>
+                <p className="text-xs text-gray-500">
+                  Código: {o.cliente.codigoCliente || "—"}
+                  {o.cliente.telefone ? ` · ${o.cliente.telefone}` : ""}
+                </p>
                 <p className="text-sm text-gray-500">{formatDate(o.data)}</p>
               </Link>
             </li>

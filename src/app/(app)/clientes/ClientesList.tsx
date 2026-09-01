@@ -52,9 +52,12 @@ export function ClientesList({ clientes }: { clientes: Cliente[] }) {
               key={c.id}
               className="rounded-xl border border-brand-cream bg-white p-5 shadow-sm transition hover:shadow-md hover:border-brand-gold/30"
             >
-              <p className="font-medium text-brand-olive">{c.razaoSocial}</p>
+              <Link href={`/clientes/${c.id}`} className="block hover:underline">
+                <p className="font-medium text-brand-olive">{c.razaoSocial}</p>
+              </Link>
               {c.nomeFantasia && <p className="text-sm text-gray-500">{c.nomeFantasia}</p>}
-              <p className="mt-2 text-sm text-gray-600">CNPJ: {c.cnpj}</p>
+              <p className="mt-2 text-sm text-gray-600">Código: {c.codigoCliente || "—"}</p>
+              <p className="text-sm text-gray-600">CNPJ: {c.cnpj}</p>
               {(c.municipio || c.uf) && (
                 <p className="text-sm text-gray-600">
                   {[c.municipio, c.uf].filter(Boolean).join(" / ")}

@@ -1,154 +1,81 @@
-# Estado atual — 2026-09-01 (ver seção "Reatribuição de representante..."
-abaixo pro que mudou nesta sessão; o resto deste arquivo reflete a sessão
-anterior do mesmo dia, que deixou o login em produção)
-
-## Reatribuição de representante + campos de orçamento (implementado nesta sessão, ainda não em produção)
-
-Pedido do usuário: admin poder ver/trocar qual representante é
-responsável por cada cliente, e travar em opções fixas (em vez de texto
-livre) vários campos de "Outras informações" do orçamento. Ver
-`.ai/memory/decisions.md` (duas entradas de 2026-09-01) pro raciocínio
-completo e as perguntas que foram feitas ao usuário antes de implementar.
-
-**O que foi feito:**
-- `Cliente.representanteId` agora pode ser trocado pelo admin — painéis
-  novos `/admin/clientes` (lista todos os clientes de todos os
-  representantes, com select de reatribuição inline) e
-  `/admin/orcamentos` + `/admin/orcamentos/[id]` (mesma ideia pros
-  orçamentos; o detalhe mostra e deixa trocar o representante
-  responsável pelo CLIENTE daquele orçamento). `/admin/representantes`
-  continua existindo como antes. Nova nav (`AdminNav.tsx`) alterna entre
-  os três.
-- Trocar o representante NÃO mexe em orçamentos já criados (cada um
-  guarda seu próprio `representanteId` de quem montou na hora) — só o
-  cadastro do cliente e os orçamentos futuros passam a ser do
-  representante novo. Decisão explícita do usuário.
-- `/orcamentos/[id]/pdf` (rota compartilhada com o app normal) passou a
-  liberar admin baixar PDF de qualquer orçamento, não só os próprios.
-- No formulário de "Novo orçamento": "Previsão de entrega" virou um mini
-  calendário próprio (`DatePickerField.tsx`, sem lib externa, cores da
-  marca); "Forma de pagamento", "Condição de pagamento" e "Frete por
-  conta" viraram `<select>` com opções fixas (Boletos/Cheque/Dinheiro/
-  Pix; à vista/21-28-35/.../21-28-35-42-49-56; CIF/FOB — o pedido
-  original só citava CIF, o usuário confirmou incluir FOB também).
-  "Volumes" e "Peso bruto" pararam de ser digitáveis — calculados a
-  partir dos itens (volumes = soma das quantidades; peso bruto = soma
-  de quantidade × peso unitário) e SEMPRE recalculados no servidor
-  (nunca confia no valor vindo do form, mesma regra já usada pra preço).
-- `Produto` ganhou `peso Float?` (nullable) — estrutura pronta pro
-  cálculo de peso bruto, mas nenhum produto tem peso preenchido ainda
-  (usuário vai informar depois). Até lá, peso bruto calcula como 0.
-
-**Bloqueio conhecido desta sessão (mesmo da sessão anterior — container
-cloud sem rede pra `binaries.prisma.sh`)**: de novo não deu pra rodar
-`prisma generate`/`migrate dev`/`next build` aqui — confirmado tentando
-(`npm install` funciona normal, mas o download do engine do Prisma dá
-403 Forbidden). Validação possível nesta sessão: `tsc --noEmit`
-comparado com um baseline tirado ANTES das mudanças (só sobraram os
-mesmos erros esperados de Prisma Client não gerado, com números de
-linha deslocados + as mesmas categorias de erro nos arquivos novos) e
-`eslint` limpo (zero erros/warnings novos) em todos os arquivos
-criados/alterados. **Antes de considerar isso pronto, alguém com rede
-boa (local ou o build do Railway) precisa rodar**: `npx prisma generate`,
-`npx prisma migrate deploy` (ou `dev` local) e `npm run build`, e só
-então testar o fluxo de admin (reatribuir representante, novo orçamento
-com os campos novos) de verdade.
-
-**Git**: código commitado localmente nesta sessão, mas **esta sessão
-também não tem permissão de push** pro repositório (mesmo bloqueio da
-sessão do login — só clone público de leitura). Patch completo
-(`git format-patch`) salvo no projeto Claude em
-`claude/reassign-representante-e-orcamento-campos.patch`, igual foi
-feito com o login.
-
----
-
-# Estado em 2026-09-01 (sessão anterior, login em produção)
+# Estado atual — 2026-09-01
 
 ## Funcionando
 
-Todo o fluxo principal está de pé e testado: login → clientes →
-catálogo → montagem de orçamento → detalhe → PDF. Visual com a
-identidade de marca Olivapel (verde-oliva/dourado/Cinzel, logo oficial)
-aplicada em todas as telas.
-
-**O app está no ar de verdade, em produção, na Railway** (não só
-localhost):
+Fluxo principal completo e no ar em produção (Railway):
 - Ferramenta de Orçamentos: https://ferramenta-orcamentos-production.up.railway.app
 - Gerenciador de Catálogo: https://gerenciador-catalogo-production.up.railway.app
 
-Cada um é um projeto Railway próprio (`ferramenta-orcamentos` /
-`artistic-contentment` — nome aleatório, é o Gerenciador de Catálogo),
-com volume persistente `/data` pro SQLite e deploy automático a cada
-`git push` pro respectivo repositório GitHub
-(`leonardoalbani06-lab/ferramenta-orcamentos` e
-`leonardoalbani06-lab/gerenciador-catalogo`). Railway CLI instalado e
-autenticado nesta máquina (`railway login` já feito) — dá pra rodar
-`railway logs`, `railway ssh`, `railway variables` etc. direto do
-terminal sem precisar abrir o site.
+Login real por usuário/senha (NextAuth v5, Credentials) — contas só
+criadas pelo admin, sem autocadastro. `role` é `"ADMIN"` ou
+`"REPRESENTANTE"` (String, não enum — SQLite não suporta enum nativo
+no Prisma). `trustHost: true` obrigatório em `auth.config.ts` fora da
+Vercel (Railway aqui), senão todo login falha com "UntrustedHost".
 
-**Login real por usuário/senha** (substituiu a identificação por nome
-sem senha da fase 1) — NextAuth.js (Auth.js) v5, Credentials provider:
-- `Representante` ganhou `username` (único), `passwordHash` (bcrypt),
-  `role` (`"ADMIN"` ou `"REPRESENTANTE"` — String, não enum, porque
-  **SQLite não suporta enum nativo no Prisma**), `ativo`.
-- Painel `/admin/representantes` (só pra quem é admin): criar conta
-  (sem autocadastro), ativar/desativar, redefinir senha.
-- `src/auth.config.ts` precisa de `trustHost: true` — sem isso o
-  NextAuth v5 rejeita todo login em produção com "UntrustedHost"
-  (confia automaticamente só na Vercel; qualquer outro host, incluindo
-  Railway, precisa desse flag). Foi um bug real encontrado testando em
-  produção, não aparece em dev local.
-- Testado de ponta a ponta em produção: login certo, senha errada
-  rejeitada, bloqueio de `/admin` pra quem não é admin, admin criando
-  representante novo e esse representante logando e usando o app.
-- Conta admin de produção: usuário `admin` (senha só com o usuário —
-  gerada nesta sessão, recomendação é trocar pelo painel assim que
-  possível, já que não existe fluxo de "esqueci minha senha").
+**Painel admin, 3 seções (`AdminNav`)**:
+- `/admin/representantes` — criar conta, ativar/desativar, redefinir
+  senha, **trocar o papel (ADMIN/REPRESENTANTE) direto num select**
+  (trava: não deixa remover o admin do último admin ativo), e ver o
+  **último login** de cada um (`Representante.ultimoLoginEm`,
+  atualizado no `authorize()` do NextAuth a cada login bem-sucedido).
+- `/admin/clientes` — todos os clientes de todos os representantes,
+  com busca, **filtro por representante** (mostra um resumo de
+  quantidade quando filtrado, sincronizado com `?representanteId=` na
+  URL), reatribuir representante responsável inline, e link "Editar"
+  pra `/admin/clientes/[id]` (formulário completo — todos os campos do
+  cliente, não só o representante).
+- `/admin/orcamentos` + `/admin/orcamentos/[id]` — todos os orçamentos,
+  mesmo filtro por representante (aqui o resumo mostra: orçamentos
+  deste mês, total geral, e soma em R$ deste mês), reatribuir
+  representante no detalhe, admin baixa PDF de qualquer orçamento.
 
-`/clientes` e `/orcamentos` têm busca com filtro instantâneo
-(razão social/nome fantasia/CNPJ; número do orçamento ou nome do
-cliente) — `ClientesList.tsx`, `OrcamentosList.tsx`, `src/lib/search.ts`.
+**Cliente**:
+- CNPJ é único **globalmente** agora (antes era só por representante —
+  dois representantes podiam cadastrar o mesmo CNPJ achando cada um
+  que era "seu" cliente). Tentar cadastrar/editar pra um CNPJ já
+  existente bloqueia e mostra o nome do representante dono.
+- Ganhou `codigoCliente` (texto livre, preenchido pelo representante —
+  obrigatório no cadastro novo, opcional em cadastros antigos/edição).
+- Tela de detalhe pro representante comum: `/clientes/[id]` — dados do
+  cliente + histórico de orçamentos dele (componente compartilhado
+  `HistoricoOrcamentosCliente`, reusado também no admin).
+- "Capa" do orçamento (nos cards de `/orcamentos`, `/admin/orcamentos`
+  e no histórico) mostra: código do cliente, nome fantasia (cai pra
+  razão social), telefone, número do orçamento.
 
-Interface é mobile-first (BottomNav, cards no mobile, barra de ação
-fixa no orçamento). Tabela A/B é por item do orçamento, não mais
-escolha única. Fotos de produto: 42/51 SKUs.
+Orçamento: calendário próprio pra previsão de entrega
+(`DatePickerField`, sem lib externa), listas fixas pra forma/condição
+de pagamento e frete por conta, volumes/peso bruto calculados a partir
+dos itens e sempre recalculados no servidor. Tabela A/B por item.
+Fotos de produto: 42/51 SKUs. Busca instantânea em clientes/orçamentos.
 
 ## Pendente / conhecido
 
-- **Validar e dar push nas mudanças desta sessão (reatribuição de
-  representante + campos de orçamento)** — ver seção no topo deste
-  arquivo. Bloqueia produção.
-- **Backup automático do volume NÃO configurado ainda** — foi
-  combinado com o usuário (Railway tem backup Daily/Weekly/Monthly por
-  volume, configurado na aba "Backups" das Settings do serviço, só
-  pelo site) mas a conversa pivotou pro login antes de confirmar que
-  foi feito. **Próximo passo prioritário.**
+- **Backup automático do volume NÃO configurado ainda** (Railway,
+  Settings → Backups → Daily, só pelo site). Combinado com o usuário,
+  ainda não confirmado como feito.
+- **Peso unitário dos produtos**: `Produto.peso` existe mas nenhum
+  produto tem valor ainda — peso bruto calcula como 0 até isso ser
+  informado.
 - **9 SKUs sem foto**: 1065, 1071, 1053, 1076, VER-24, VER-28, 1052,
   1078, 1078/1.
 - **7 códigos com foto mas sem cadastro no catálogo**: 0610, 1981,
   1982, 2602, 2907, 2909, 3009. Fotos já em `public/produtos/`.
-- **Peso unitário dos produtos**: nenhum produto tem `peso` preenchido
-  ainda (campo novo desta sessão) — peso bruto do orçamento calcula
-  como 0 até isso ser informado.
 - **Gerenciador de Catálogo → integração de volta**: quando o usuário
   terminar de organizar categoria/marca/unidade lá e exportar o JSON,
   falta migrar `Produto.categoria` (hoje texto único) pra
   `Categoria`/`Marca` muitos-para-muitos + `unidade` neste projeto.
-- Hooks do Claude Code (`PreCompact`/`SessionStart`) configurados em
-  `.claude/settings.json` — já confirmados funcionando (o próprio hook
-  de lembrete disparou numa compactação desta sessão).
+- Nota de produto (não implementada, só documentada por pedido do
+  usuário): hoje qualquer representante que tentar cadastrar um CNPJ
+  duplicado vê o nome do representante dono do cliente. Se isso virar
+  problema de "caça de carteira" entre representantes, considerar
+  restringir essa informação só pro admin.
 
 ## Próximo passo recomendado
 
-1. Rodar `prisma generate`/`migrate`/`build` num ambiente com rede
-   normal, dar push, e testar de ponta a ponta o que foi feito nesta
-   sessão (ver seção no topo).
-2. Configurar backup automático do volume nos dois projetos Railway
-   (Daily é suficiente).
-3. Avisar o usuário a trocar a senha da conta admin de produção pelo
-   painel `/admin/representantes` assim que possível.
-4. Cadastrar os representantes reais (hoje só existe a conta admin em
-   produção).
-5. Aguardar o JSON do Gerenciador de Catálogo pra migrar
+1. Configurar backup automático do volume nos dois projetos Railway.
+2. Cadastrar os representantes reais (hoje a base tem só contas de
+   teste em produção, mais a conta admin).
+3. Aguardar o JSON do Gerenciador de Catálogo pra migrar
    categoria/marca.
+4. Quando o usuário informar, preencher `Produto.peso` unitário.

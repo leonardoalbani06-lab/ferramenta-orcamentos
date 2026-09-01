@@ -23,6 +23,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const senhaValida = await bcrypt.compare(password, representante.passwordHash);
         if (!senhaValida) return null;
 
+        await db.representante.update({
+          where: { id: representante.id },
+          data: { ultimoLoginEm: new Date() },
+        });
+
         return {
           id: representante.id,
           name: representante.nome,

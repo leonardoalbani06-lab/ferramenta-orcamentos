@@ -2,10 +2,13 @@ import { db } from "@/lib/db";
 import { OrcamentosAdminList } from "./OrcamentosAdminList";
 
 export default async function OrcamentosAdminPage() {
-  const orcamentos = await db.orcamento.findMany({
-    include: { cliente: { include: { representante: true } } },
-    orderBy: { criadoEm: "desc" },
-  });
+  const [orcamentos, representantes] = await Promise.all([
+    db.orcamento.findMany({
+      include: { cliente: { include: { representante: true } } },
+      orderBy: { criadoEm: "desc" },
+    }),
+    db.representante.findMany({ orderBy: { nome: "asc" } }),
+  ]);
 
   return (
     <main className="mx-auto max-w-3xl p-4 sm:p-8">
@@ -14,7 +17,7 @@ export default async function OrcamentosAdminPage() {
         <p className="text-sm text-gray-500">Orçamentos de todos os representantes.</p>
       </div>
 
-      <OrcamentosAdminList orcamentos={orcamentos} />
+      <OrcamentosAdminList orcamentos={orcamentos} representantes={representantes} />
     </main>
   );
 }

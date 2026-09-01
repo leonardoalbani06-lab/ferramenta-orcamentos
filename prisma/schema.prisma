@@ -27,6 +27,7 @@ model Representante {
   role         String   @default("REPRESENTANTE")
   ativo        Boolean  @default(true)
   criadoEm     DateTime @default(now())
+  ultimoLoginEm DateTime?
 
   clientes   Cliente[]
   orcamentos Orcamento[]
@@ -41,6 +42,8 @@ model Cliente {
   id                String   @id @default(cuid())
   representanteId   String
   representante     Representante @relation(fields: [representanteId], references: [id])
+
+  codigoCliente     String? // preenchido pelo representante no cadastro; texto livre, não gerado
 
   razaoSocial       String
   nomeFantasia      String?
@@ -61,8 +64,11 @@ model Cliente {
 
   orcamentos        Orcamento[]
 
-  // Um mesmo representante não cadastra o mesmo CNPJ duas vezes
-  @@unique([representanteId, cnpj])
+  // CNPJ é único globalmente — um CNPJ é sempre o mesmo cliente, não
+  // importa qual representante cadastrou (antes a unicidade era só por
+  // representante, o que deixava dois representantes cadastrarem o
+  // mesmo CNPJ cada um achando que era "seu" cliente).
+  @@unique([cnpj])
   @@index([representanteId])
   @@map("clientes")
 }

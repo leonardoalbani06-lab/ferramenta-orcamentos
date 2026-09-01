@@ -29,17 +29,21 @@ npm run db:studio
 ## Funcionalidades
 
 1. Login por usuário/senha (contas criadas só pelo admin, sem autocadastro)
-2. Cadastro/listagem de clientes, isolado por representante
+2. Cadastro/listagem de clientes (com código do cliente, CNPJ único
+   globalmente), isolado por representante, com tela de detalhe e
+   histórico de orçamentos por cliente
 3. Catálogo navegável (categoria/busca), Tabela A/B, com foto por produto
 4. Montagem e revisão de orçamento (desconto, IPI, ST, frete), com
    calendário próprio pra previsão de entrega e listas fixas pra forma/
    condição de pagamento e frete; volumes e peso bruto calculados
    automaticamente a partir dos itens
 5. Geração de PDF no layout do orçamento aprovado de referência
-6. Painel admin: criar conta de representante, ativar/desativar,
-   redefinir senha (`/admin/representantes`); ver todos os clientes e
-   orçamentos de todos os representantes e reatribuir o representante
-   responsável por um cliente (`/admin/clientes`, `/admin/orcamentos`)
+6. Painel admin (`/admin/representantes`, `/admin/clientes`,
+   `/admin/orcamentos`): criar conta de representante, ativar/desativar,
+   redefinir senha, trocar o cargo (admin/representante) e ver o último
+   login; ver e editar todos os clientes e orçamentos de todos os
+   representantes, com filtro por representante e resumo; reatribuir o
+   representante responsável por um cliente
 
 ## Estrutura de pastas
 

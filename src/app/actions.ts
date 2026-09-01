@@ -34,10 +34,28 @@ export async function criarCliente(formData: FormData) {
 
   const razaoSocial = String(formData.get("razaoSocial") ?? "").trim();
   const cnpj = String(formData.get("cnpj") ?? "").trim();
+  const codigoCliente = String(formData.get("codigoCliente") ?? "").trim();
 
-  if (!razaoSocial || !cnpj) {
+  if (!razaoSocial || !cnpj || !codigoCliente) {
     redirect(
-      "/clientes/novo?erro=" + encodeURIComponent("Razão social e CNPJ são obrigatórios.")
+      "/clientes/novo?erro=" +
+        encodeURIComponent("Código do cliente, razão social e CNPJ são obrigatórios.")
+    );
+  }
+
+  // CNPJ é único globalmente (não só por representante) — checa antes de
+  // tentar criar pra poder mostrar de quem já é o cliente, em vez de só um
+  // erro genérico de duplicidade.
+  const clienteExistente = await db.cliente.findUnique({
+    where: { cnpj },
+    include: { representante: true },
+  });
+  if (clienteExistente) {
+    redirect(
+      "/clientes/novo?erro=" +
+        encodeURIComponent(
+          `Esse CNPJ já está cadastrado, em nome do representante ${clienteExistente.representante.nome}.`
+        )
     );
   }
 
@@ -50,6 +68,7 @@ export async function criarCliente(formData: FormData) {
     await db.cliente.create({
       data: {
         representanteId,
+        codigoCliente,
         razaoSocial,
         cnpj,
         nomeFantasia: campo("nomeFantasia"),

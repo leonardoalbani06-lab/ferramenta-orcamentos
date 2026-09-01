@@ -339,3 +339,103 @@ Arquivos relacionados: `prisma/schema.prisma`,
 `src/app/(app)/orcamentos/[id]/page.tsx`,
 `src/app/admin/orcamentos/[id]/page.tsx`,
 `src/lib/pdf/OrcamentoDocument.tsx`
+
+## 2026-09-01
+Decisão: CNPJ de cliente passou a ser único **globalmente**, não mais
+só por representante (`@@unique([representanteId, cnpj])` →
+`@@unique([cnpj])`). Antes disso dois representantes diferentes
+podiam cadastrar o mesmo CNPJ, cada um achando que era "seu" cliente
+— errado, já que um CNPJ é sempre o mesmo cliente.
+Motivo: pedido direto do usuário. Confirmei que não havia duplicata de
+CNPJ entre representantes (local nem produção) antes de aplicar a
+migration, então não precisou de nenhuma limpeza de dado.
+Bloqueio na hora de cadastrar/editar mostra o nome do representante
+dono do CNPJ já cadastrado — decisão do usuário: por enquanto qualquer
+representante vê esse nome ao tentar duplicar; **nota pra revisar no
+futuro** se isso virar problema de "caça de carteira" entre
+representantes (restringir a visibilidade do nome só pro admin).
+Arquivos relacionados: `prisma/schema.prisma`,
+`prisma/migrations/20260901162909_cliente_cnpj_global_codigo_ultimo_login/`,
+`src/app/actions.ts` (`criarCliente`),
+`src/app/admin/actions.ts` (`atualizarClienteAdmin`)
+
+## 2026-09-01
+Decisão: painéis `/admin/clientes` e `/admin/orcamentos` ganharam um
+filtro por representante (com resumo automático quando um é
+selecionado — quantidade de clientes; ou orçamentos deste mês/total/
+soma em R$ deste mês) e o filtro escolhido fica salvo em
+`?representanteId=` na URL (dá pra recarregar/compartilhar já
+filtrado). `/admin/representantes` ganhou o mesmo filtro por
+consistência, embora sem resumo (não fazia sentido calcular resumo de
+si mesmo).
+Motivo: pedido direto do usuário.
+Implementação: tudo client-side com `useMemo` sobre os dados já
+carregados (mesmo padrão da busca que já existia) — sem query nova ao
+servidor. `RepresentantesAdminList.tsx` novo, separado de `page.tsx`
+(que virou Server Component só de fetch + form de criar conta), pra
+poder usar hooks de client component (mesmo padrão de
+`ClientesAdminList`/`OrcamentosAdminList`).
+Arquivos relacionados: `src/app/admin/clientes/ClientesAdminList.tsx`,
+`src/app/admin/orcamentos/OrcamentosAdminList.tsx`,
+`src/app/admin/representantes/RepresentantesAdminList.tsx`,
+`src/app/admin/representantes/page.tsx`
+
+## 2026-09-01
+Decisão: admin ganhou tela de edição completa do cliente
+(`/admin/clientes/[id]`) — antes só dava pra trocar o representante
+responsável, agora edita todos os campos (razão social, CNPJ, código
+do cliente, endereço, etc.), com a mesma checagem de CNPJ único global
+(ignorando o próprio cliente sendo editado) e vendo o histórico de
+orçamentos dele ali mesmo.
+Também: `Cliente` ganhou `codigoCliente` (texto livre, preenchido pelo
+representante — obrigatório no cadastro novo em `/clientes/novo`,
+opcional/nullable no banco pra não quebrar cadastros antigos).
+Criada tela de detalhe pro representante comum também
+(`/clientes/[id]`, com o mesmo isolamento por `representanteId` já
+usado em `/orcamentos/[id]`) — os cards de `/clientes` agora linkam
+pra lá. Componente `HistoricoOrcamentosCliente` (novo, em
+`src/components/`, fora de `admin/` porque é reusado nos dois lados)
+mostra a lista de orçamentos de um cliente, recebendo `basePath` pra
+apontar pro link certo (`/orcamentos` ou `/admin/orcamentos`).
+"Capa" do orçamento (nos cards de `/orcamentos`, `/admin/orcamentos` e
+no histórico) passou a mostrar código do cliente, nome fantasia (cai
+pra razão social se vazio) e telefone, além do número que já existia.
+Arquivos relacionados: `prisma/schema.prisma` (`codigoCliente`),
+`src/app/admin/clientes/[id]/page.tsx`,
+`src/app/(app)/clientes/[id]/page.tsx`,
+`src/components/HistoricoOrcamentosCliente.tsx`,
+`src/app/(app)/clientes/ClientesList.tsx`,
+`src/app/(app)/orcamentos/OrcamentosList.tsx`,
+`src/app/admin/orcamentos/OrcamentosAdminList.tsx`
+
+## 2026-09-01
+Decisão: `role` do representante (ADMIN/REPRESENTANTE) agora é
+editável depois de criado (antes só na criação) — select em
+`/admin/representantes` que já submete no `onChange`, mesmo padrão do
+`ReatribuirRepresentante`. Trava: não deixa remover o role ADMIN do
+último admin ativo (checa `count` de outros admins ativos antes de
+aplicar), pra não bloquear todo mundo fora de `/admin` sem querer —
+testado de propósito (demovi dois admins em sequência, o segundo foi
+bloqueado corretamente com o role intacto no banco).
+`Representante` também ganhou `ultimoLoginEm` (DateTime?), atualizado
+dentro do `authorize()` do Credentials provider depois de confirmar a
+senha certa — mostrado em `/admin/representantes` como "Nunca" pra
+quem ainda não logou desde que esse campo passou a existir (contas
+antigas não têm o valor retroativo, só a partir de agora).
+Arquivos relacionados: `prisma/schema.prisma`, `src/auth.ts`,
+`src/app/admin/actions.ts` (`alterarRoleRepresentante`),
+`src/components/admin/AlterarRoleRepresentante.tsx`,
+`src/app/admin/representantes/RepresentantesAdminList.tsx`
+
+## 2026-09-01
+Nota de ferramenta (não é decisão do produto): `curl -F` neste
+ambiente (Windows/Git Bash) corrompe o valor de um campo quando ele
+contém parênteses — ex: `-F 'telefone=(51) 3333-4444'` gravou um
+pedaço do boundary delimiter do multipart no lugar do valor. Espaço
+sozinho não tem problema, só parênteses. Confirmado que não é bug do
+app (código só lê `formData.get()`, sem nenhum tratamento que pudesse
+causar isso) — é um problema da ferramenta de teste, não do
+formulário real (o navegador nunca teria esse problema, só afeta
+simular submissões via curl). Ao testar campos com parênteses nesse
+ambiente no futuro, evitar `curl -F` com parênteses no valor ou usar
+`--data-binary` com um arquivo montado à mão.
