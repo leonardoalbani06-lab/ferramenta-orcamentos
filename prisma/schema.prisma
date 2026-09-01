@@ -12,12 +12,21 @@ datasource db {
 }
 
 // ------------------------------------------------------------------
-// Representante: identificação simples por nome, sem senha (fase 1)
+// Representante: login real por usuário/senha. Contas são criadas só
+// pelo admin (sem autocadastro) — ver painel /admin/representantes.
+//
+// `role` é String (não enum) porque o SQLite não suporta enum nativo no
+// Prisma — os valores válidos são só "ADMIN" ou "REPRESENTANTE",
+// controlados no código TypeScript (ver src/types/next-auth.d.ts).
 // ------------------------------------------------------------------
 model Representante {
-  id         String   @id @default(cuid())
-  nome       String   @unique
-  criadoEm   DateTime @default(now())
+  id           String   @id @default(cuid())
+  nome         String
+  username     String   @unique
+  passwordHash String
+  role         String   @default("REPRESENTANTE")
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now())
 
   clientes   Cliente[]
   orcamentos Orcamento[]

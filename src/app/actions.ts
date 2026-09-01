@@ -2,28 +2,30 @@
 
 import { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
+import { AuthError } from "next-auth";
 import { db } from "@/lib/db";
-import { clearRepresentanteId, getRepresentanteId, setRepresentanteId } from "@/lib/session";
+import { signIn, signOut } from "@/auth";
+import { getRepresentanteId } from "@/lib/session";
 
-export async function identificarRepresentante(formData: FormData) {
-  const nome = String(formData.get("nome") ?? "").trim();
-  if (!nome) {
-    redirect("/?erro=" + encodeURIComponent("Informe seu nome."));
+export async function autenticar(formData: FormData) {
+  try {
+    await signIn("credentials", {
+      username: formData.get("username"),
+      password: formData.get("password"),
+      redirectTo: "/clientes",
+    });
+  } catch (error) {
+    // `signIn` com redirectTo lança um erro interno do Next.js pra fazer
+    // o redirect — não é uma falha de login, então deixa passar direto.
+    if (error instanceof AuthError) {
+      redirect("/?erro=" + encodeURIComponent("Usuário ou senha inválidos."));
+    }
+    throw error;
   }
-
-  const representante = await db.representante.upsert({
-    where: { nome },
-    update: {},
-    create: { nome },
-  });
-
-  await setRepresentanteId(representante.id);
-  redirect("/clientes");
 }
 
 export async function sairRepresentante() {
-  await clearRepresentanteId();
-  redirect("/");
+  await signOut({ redirectTo: "/" });
 }
 
 export async function criarCliente(formData: FormData) {

@@ -2,8 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
-import { db } from "@/lib/db";
-import { getRepresentanteId } from "@/lib/session";
+import { getRepresentanteLogado } from "@/lib/session";
 import { sairRepresentante } from "../actions";
 
 export default async function AppLayout({
@@ -11,12 +10,7 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const representanteId = await getRepresentanteId();
-  if (!representanteId) redirect("/");
-
-  const representante = await db.representante.findUnique({
-    where: { id: representanteId },
-  });
+  const representante = await getRepresentanteLogado();
   if (!representante) redirect("/");
 
   return (
@@ -43,6 +37,14 @@ export default async function AppLayout({
               <Link href="/orcamentos" className="text-brand-cream/80 transition hover:text-brand-gold">
                 Orçamentos
               </Link>
+              {representante.role === "ADMIN" && (
+                <Link
+                  href="/admin/representantes"
+                  className="text-brand-cream/80 transition hover:text-brand-gold"
+                >
+                  Admin
+                </Link>
+              )}
             </nav>
           </div>
 
@@ -68,6 +70,14 @@ export default async function AppLayout({
             </summary>
             <div className="absolute right-0 top-11 z-50 w-52 rounded-lg border border-brand-gold/20 bg-brand-oliveDark p-3 shadow-xl">
               <p className="mb-2 truncate text-sm text-brand-cream">{representante.nome}</p>
+              {representante.role === "ADMIN" && (
+                <Link
+                  href="/admin/representantes"
+                  className="mb-2 block rounded border border-brand-gold/40 px-3 py-2 text-center text-xs font-medium text-brand-gold transition hover:bg-brand-gold/10"
+                >
+                  Admin
+                </Link>
+              )}
               <form action={sairRepresentante}>
                 <button
                   type="submit"

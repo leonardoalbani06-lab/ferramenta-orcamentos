@@ -1,20 +1,24 @@
 # Olivapel — Ferramenta de Orçamentos
 
 Ferramenta interna para representantes da D'Classe (marca Olivapel) montarem orçamentos:
-identificação simples, cadastro de clientes, catálogo navegável com
+login por usuário/senha, cadastro de clientes, catálogo navegável com
 fotos, montagem de orçamento e geração de PDF no layout real da empresa.
 
 Stack: Next.js 15 (App Router) + TypeScript + Tailwind + Prisma/SQLite +
-`@react-pdf/renderer`.
+`@react-pdf/renderer` + NextAuth.js (Auth.js) v5.
 
 ## Como rodar localmente
 
 ```bash
 npm install
+cp .env.example .env   # preencha DATABASE_URL, AUTH_SECRET, ADMIN_USERNAME/PASSWORD
 npx prisma migrate dev
-npm run db:seed
+npm run db:seed        # cria a 1ª conta admin (ADMIN_USERNAME/PASSWORD) + catálogo
 npm run dev   # http://localhost:3000
 ```
+
+Depois de logar com a conta admin, cadastre os demais representantes em
+`/admin/representantes` — não existe autocadastro.
 
 Pra inspecionar o banco visualmente:
 
@@ -24,19 +28,27 @@ npm run db:studio
 
 ## Funcionalidades
 
-1. Identificação do representante (nome, sem senha — fase 1)
+1. Login por usuário/senha (contas criadas só pelo admin, sem autocadastro)
 2. Cadastro/listagem de clientes, isolado por representante
 3. Catálogo navegável (categoria/busca), Tabela A/B, com foto por produto
 4. Montagem e revisão de orçamento (desconto, IPI, ST, frete)
 5. Geração de PDF no layout do orçamento aprovado de referência
+6. Painel admin (`/admin/representantes`): criar conta de representante,
+   ativar/desativar, redefinir senha
 
 ## Estrutura de pastas
 
 ```
 src/
+├── auth.ts               # config completa do NextAuth (Credentials + Prisma)
+├── auth.config.ts         # config "edge-safe" (usada pelo middleware)
+├── middleware.ts
 ├── app/
-│   ├── page.tsx         # login (identificação do representante)
+│   ├── page.tsx         # login (usuário/senha)
 │   ├── actions.ts       # Server Actions
+│   ├── api/auth/[...nextauth]/route.ts
+│   ├── admin/             # exige role ADMIN
+│   │   └── representantes/
 │   └── (app)/           # rotas que exigem login
 │       ├── clientes/
 │       ├── catalogo/

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { identificarRepresentante } from "./actions";
+import { autenticar } from "./actions";
 
 export default async function Home({
   searchParams,
@@ -29,26 +29,41 @@ export default async function Home({
         </div>
 
         <p className="mb-6 text-center text-sm text-brand-oliveDark/70">
-          Identifique-se para montar orçamentos
+          Entre com seu usuário e senha
         </p>
 
         {erro && (
           <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{erro}</p>
         )}
 
-        <form action={identificarRepresentante} className="flex flex-col gap-3">
-          <label className="text-sm font-medium text-brand-olive" htmlFor="nome">
-            Seu nome
+        <form action={autenticar} className="flex flex-col gap-3">
+          <label className="text-sm font-medium text-brand-olive" htmlFor="username">
+            Usuário
           </label>
           <input
-            id="nome"
-            name="nome"
+            id="username"
+            name="username"
             type="text"
             required
             autoFocus
+            autoComplete="username"
             className="rounded-lg border border-brand-olive/20 bg-white px-3 py-2 outline-none transition focus:border-brand-olive focus:ring-2 focus:ring-brand-olive/20"
-            placeholder="Ex: João Silva"
+            placeholder="Ex: joao.silva"
           />
+
+          <label className="text-sm font-medium text-brand-olive" htmlFor="password">
+            Senha
+          </label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            required
+            autoComplete="current-password"
+            className="rounded-lg border border-brand-olive/20 bg-white px-3 py-2 outline-none transition focus:border-brand-olive focus:ring-2 focus:ring-brand-olive/20"
+            placeholder="••••••••"
+          />
+
           <button
             type="submit"
             className="mt-2 rounded-lg bg-brand-olive px-4 py-2.5 font-medium text-white transition hover:bg-brand-oliveDark"
@@ -56,6 +71,10 @@ export default async function Home({
             Entrar
           </button>
         </form>
+
+        <p className="mt-6 text-center text-xs text-brand-oliveDark/50">
+          Esqueceu a senha? Peça pro admin redefinir no painel.
+        </p>
       </div>
     </main>
   );

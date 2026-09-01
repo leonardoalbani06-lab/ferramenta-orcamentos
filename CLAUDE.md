@@ -16,12 +16,19 @@ disso.
 
 ## Diretórios principais
 
-- `src/app/` — rotas Next.js (App Router). `page.tsx` na raiz é o login;
-  tudo dentro de `(app)/` exige representante logado.
-- `src/app/actions.ts` — todas as Server Actions do app, num arquivo só.
+- `src/app/` — rotas Next.js (App Router). `page.tsx` na raiz é o login
+  (usuário/senha); `(app)/` exige representante logado; `admin/` exige
+  role `ADMIN` (gerenciar contas de representante).
+- `src/app/actions.ts` — Server Actions do app principal (login, clientes,
+  orçamentos). `src/app/admin/actions.ts` — Server Actions do painel admin
+  (cada uma confere `role === "ADMIN"` de novo no servidor).
+- `src/auth.ts` / `src/auth.config.ts` — NextAuth (Auth.js) v5, Credentials
+  provider. `auth.config.ts` é a parte "edge-safe" (sem Prisma/bcrypt),
+  usada pelo `middleware.ts`; `auth.ts` tem a config completa.
 - `src/components/` — componentes compartilhados entre telas.
-- `src/lib/` — `db.ts` (Prisma client), `session.ts` (cookie), `format.ts`
-  (formatação pt-BR), `pdf/OrcamentoDocument.tsx` (layout do PDF).
+- `src/lib/` — `db.ts` (Prisma client), `session.ts` (helpers sobre a
+  sessão do NextAuth), `format.ts` (formatação pt-BR),
+  `pdf/OrcamentoDocument.tsx` (layout do PDF).
 - `prisma/` — schema, migrations, seed do catálogo.
 - `public/produtos/` — fotos dos produtos (nome do arquivo = SKU).
 - `scripts/` — utilitários pontuais (extração/associação de fotos).
