@@ -5,6 +5,10 @@ import type { NextAuthConfig } from "next-auth";
 // Prisma Client/bcrypt aqui — só o suficiente pra decodificar o JWT da
 // sessão e definir os callbacks que enriquecem token/session.
 export const authConfig = {
+  // Necessário fora da Vercel (ex: Railway) — sem isso o NextAuth v5
+  // rejeita qualquer request com "UntrustedHost" porque não reconhece o
+  // domínio automaticamente como faria na Vercel.
+  trustHost: true,
   pages: {
     signIn: "/",
   },
