@@ -1,75 +1,80 @@
-# Estado atual — 2026-08-19
+# Estado atual — 2026-09-01
 
 ## Funcionando
 
-Todo o fluxo principal está de pé e testado: identificação →
-clientes → catálogo → montagem de orçamento → detalhe → PDF. Visual
-com a identidade de marca (verde-oliva/dourado/Cinzel) aplicada em
-**todas** as telas (login, cabeçalho/nav, clientes, catálogo,
-orçamentos novo/detalhe/lista) — o refinamento visual que antes
-faltava em catálogo/orçamentos foi concluído.
+Todo o fluxo principal está de pé e testado: login → clientes →
+catálogo → montagem de orçamento → detalhe → PDF. Visual com a
+identidade de marca Olivapel (verde-oliva/dourado/Cinzel, logo oficial)
+aplicada em todas as telas.
 
-O app usa o logo oficial da **Olivapel** de verdade agora (não só a
-paleta como referência) — login, cabeçalho e cabeçalho do PDF do
-orçamento. Ver `.ai/memory/decisions.md` (2026-08-19).
+**O app está no ar de verdade, em produção, na Railway** (não só
+localhost):
+- Ferramenta de Orçamentos: https://ferramenta-orcamentos-production.up.railway.app
+- Gerenciador de Catálogo: https://gerenciador-catalogo-production.up.railway.app
 
-`/clientes` e `/orcamentos` têm busca com filtro instantâneo (sem
-apertar Enter): clientes por razão social/nome fantasia/CNPJ,
-orçamentos por número ou nome do cliente. Filtra no client-side sobre
-a lista já carregada (`ClientesList.tsx`, `OrcamentosList.tsx`,
-`src/lib/search.ts`) — não busca de novo no banco a cada tecla.
+Cada um é um projeto Railway próprio (`ferramenta-orcamentos` /
+`artistic-contentment` — nome aleatório, é o Gerenciador de Catálogo),
+com volume persistente `/data` pro SQLite e deploy automático a cada
+`git push` pro respectivo repositório GitHub
+(`leonardoalbani06-lab/ferramenta-orcamentos` e
+`leonardoalbani06-lab/gerenciador-catalogo`). Railway CLI instalado e
+autenticado nesta máquina (`railway login` já feito) — dá pra rodar
+`railway logs`, `railway ssh`, `railway variables` etc. direto do
+terminal sem precisar abrir o site.
 
-Interface é mobile-first: `BottomNav` fixo embaixo no celular (vira
-nav horizontal no topo em telas largas), tabelas viram cards no
-mobile, barra de ação fixa com total corrente no formulário de
-orçamento. Bug real de header estourando em viewport de 375px foi
-corrigido nesse trabalho.
+**Login real por usuário/senha** (substituiu a identificação por nome
+sem senha da fase 1) — NextAuth.js (Auth.js) v5, Credentials provider:
+- `Representante` ganhou `username` (único), `passwordHash` (bcrypt),
+  `role` (`"ADMIN"` ou `"REPRESENTANTE"` — String, não enum, porque
+  **SQLite não suporta enum nativo no Prisma**), `ativo`.
+- Painel `/admin/representantes` (só pra quem é admin): criar conta
+  (sem autocadastro), ativar/desativar, redefinir senha.
+- `src/auth.config.ts` precisa de `trustHost: true` — sem isso o
+  NextAuth v5 rejeita todo login em produção com "UntrustedHost"
+  (confia automaticamente só na Vercel; qualquer outro host, incluindo
+  Railway, precisa desse flag). Foi um bug real encontrado testando em
+  produção, não aparece em dev local.
+- Testado de ponta a ponta em produção: login certo, senha errada
+  rejeitada, bloqueio de `/admin` pra quem não é admin, admin criando
+  representante novo e esse representante logando e usando o app.
+- Conta admin de produção: usuário `admin` (senha só com o usuário —
+  gerada nesta sessão, recomendação é trocar pelo painel assim que
+  possível, já que não existe fluxo de "esqueci minha senha").
 
-**Tabela A/B agora é por item**, não mais uma escolha única pro
-orçamento inteiro — cada linha de produto no orçamento escolhe A ou B
-independentemente (`ItemOrcamento.tabelaUsada`; `Orcamento.tabelaUsada`
-foi removido do schema).
+`/clientes` e `/orcamentos` têm busca com filtro instantâneo
+(razão social/nome fantasia/CNPJ; número do orçamento ou nome do
+cliente) — `ClientesList.tsx`, `OrcamentosList.tsx`, `src/lib/search.ts`.
 
-Fotos de produto: 42 dos 51 SKUs do catálogo têm foto (extraída dos PDFs
-que o usuário mandou), aparecendo no catálogo, na montagem do orçamento,
-no detalhe e no PDF gerado. Rótulo na UI é "SKU" (o PDF mantém
-"Código:" pra bater com o documento real de referência).
-
-Hooks do Claude Code configurados em `.claude/settings.json`:
-`PreCompact` (matchers `manual` e `auto`) roda
-`.claude/hooks/backup-before-compact.sh` (backup da transcrição da
-sessão antes de compactar); `SessionStart` (matcher `compact`) roda
-`.claude/hooks/remind-update-context.sh` (lembrete pra reler o código e
-atualizar `.ai/context` antes de continuar). Ambos testados
-manualmente e validados com `jq -e`.
+Interface é mobile-first (BottomNav, cards no mobile, barra de ação
+fixa no orçamento). Tabela A/B é por item do orçamento, não mais
+escolha única. Fotos de produto: 42/51 SKUs.
 
 ## Pendente / conhecido
 
-- **9 SKUs sem foto** (sem arquivo-fonte disponível): 1065, 1071, 1053,
-  1076, VER-24, VER-28, 1052, 1078, 1078/1.
-- **7 códigos com foto mas sem cadastro no catálogo** (faltam
-  preço/descrição/categoria): 0610, 1981, 1982, 2602, 2907, 2909, 3009.
-  Fotos já estão em `public/produtos/{codigo}.jpg`, só falta criar o
-  `Produto` quando o usuário mandar os dados.
-- **Gerenciador de Catálogo** (ferramenta avulsa, projeto separado em
-  `C:\Users\leona\Desktop\Gerenciador Catalogo DClasse`) está
-  funcional: usuário está organizando categoria(s)/marca(s)/unidade dos
-  51 produtos lá, com auto-save e exportação em JSON. Quando ele devolver
-  o JSON exportado, falta migrar `Produto.categoria` (hoje campo texto
-  único neste projeto) pra relação muitos-para-muitos com
-  `Categoria`/`Marca`, e adicionar `unidade`.
-- Ativação dos hooks: `.claude/settings.json` foi criado nesta sessão
-  (não existia antes) — pode ser necessário reiniciar o Claude Code ou
-  rodar `/hooks` numa sessão interativa pra garantir que o watcher de
-  config pegou o arquivo novo.
-- Nenhuma autenticação real (representante só digita o nome, fase 1 —
-  decisão deliberada do briefing original, não uma lacuna).
+- **Backup automático do volume NÃO configurado ainda** — foi
+  combinado com o usuário (Railway tem backup Daily/Weekly/Monthly por
+  volume, configurado na aba "Backups" das Settings do serviço, só
+  pelo site) mas a conversa pivotou pro login antes de confirmar que
+  foi feito. **Próximo passo prioritário.**
+- **9 SKUs sem foto**: 1065, 1071, 1053, 1076, VER-24, VER-28, 1052,
+  1078, 1078/1.
+- **7 códigos com foto mas sem cadastro no catálogo**: 0610, 1981,
+  1982, 2602, 2907, 2909, 3009. Fotos já em `public/produtos/`.
+- **Gerenciador de Catálogo → integração de volta**: quando o usuário
+  terminar de organizar categoria/marca/unidade lá e exportar o JSON,
+  falta migrar `Produto.categoria` (hoje texto único) pra
+  `Categoria`/`Marca` muitos-para-muitos + `unidade` neste projeto.
+- Hooks do Claude Code (`PreCompact`/`SessionStart`) configurados em
+  `.claude/settings.json` — já confirmados funcionando (o próprio hook
+  de lembrete disparou numa compactação desta sessão).
 
 ## Próximo passo recomendado
 
-Aguardar o usuário devolver o JSON exportado do Gerenciador de
-Catálogo e então migrar o schema deste projeto (`Produto.categoria` →
-`Categoria`/`Marca` muitos-para-muitos + `unidade`), atualizando
-catálogo e PDF pra refletir a nova estrutura. Fora isso, o app está
-funcionalmente completo pro fluxo principal — próximos pedidos tendem
-a ser refinamento pontual ou os 7 SKUs pendentes de cadastro.
+1. Configurar backup automático do volume nos dois projetos Railway
+   (Daily é suficiente).
+2. Avisar o usuário a trocar a senha da conta admin de produção pelo
+   painel `/admin/representantes` assim que possível.
+3. Cadastrar os representantes reais (hoje só existe a conta admin em
+   produção).
+4. Aguardar o JSON do Gerenciador de Catálogo pra migrar
+   categoria/marca.

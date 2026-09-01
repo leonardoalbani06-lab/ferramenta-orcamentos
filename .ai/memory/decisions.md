@@ -190,3 +190,80 @@ busca de CNPJ/número ignora pontuação e compara só dígitos
 Arquivos relacionados: `src/lib/search.ts`,
 `src/app/(app)/clientes/ClientesList.tsx`,
 `src/app/(app)/orcamentos/OrcamentosList.tsx`
+
+## 2026-08-20
+Decisão: deploy real dos dois projetos (Ferramenta de Orçamentos e
+Gerenciador de Catálogo) na Railway, com Postgres descartado em favor
+de manter SQLite + volume persistente — menos migração de código.
+Repos GitHub criados pelo usuário (`leonardoalbani06-lab/*`), CLI da
+Railway instalada e usada pra quase tudo (link, variables, volume,
+ssh, logs) — só a criação do **volume** em si precisou ser feita pelo
+site porque `railway volume add` tem um bug real que trava com panic
+("Option::unwrap() on a None value") em qualquer projeto, não é
+específico deste.
+Bugs reais encontrados só em build/deploy de produção (nenhum
+aparecia em `npm run dev`):
+- `<a href="/orcamentos">` interno — o ESLint do Next trata `no-html-
+  for-pages` como erro de build (não warning) em produção; virou
+  `<Link>`.
+- Pasta `archive/` (código obsoleto preservado) sendo type-checked
+  por engano no build — faltava excluir no `tsconfig.json`.
+- Seed do Gerenciador de Catálogo lia um caminho absoluto do Windows
+  do projeto principal — não existe no container Linux do Railway;
+  virou uma cópia local (`prisma/seed-data/produtos.json`) dentro do
+  próprio repo do Gerenciador de Catálogo.
+- Home do Gerenciador de Catálogo fazia query no Prisma sem
+  `export const dynamic = "force-dynamic"` — Next tentava
+  pré-renderizar como estático no build, antes de `DATABASE_URL`
+  existir.
+Impacto: `railway ssh` (precisa de chave SSH local registrada com
+`railway ssh keys add`, e host key aceito via `~/.ssh/config` com
+`StrictHostKeyChecking accept-new` pro `ssh.railway.com`) é o jeito de
+rodar `npm run db:seed` contra o banco de produção de verdade —
+`railway run` só injeta as env vars e roda LOCALMENTE, não serve pra
+isso. `railway variables --set "K=V" --skip-deploys` configura env var
+sem disparar redeploy na hora.
+Arquivos relacionados: `.claude/launch.json` (nos dois projetos),
+`tsconfig.json`, `src/app/(app)/orcamentos/novo/OrcamentoBuilder.tsx`,
+`prisma/seed.ts` (Gerenciador de Catálogo), `src/app/page.tsx`
+(Gerenciador de Catálogo)
+
+## 2026-09-01
+Decisão: identificação por nome (sem senha, fase 1) virou login real
+por usuário/senha — NextAuth.js (Auth.js) v5, Credentials provider.
+Motivo: pedido direto do usuário, já com o app público na Railway (a
+falta de senha virou risco de exposição de dados reais, não só uma
+lacuna aceitável de MVP local). Decisões confirmadas com o usuário:
+só admin cadastra representante (sem autocadastro); dados de teste
+existentes (representantes/clientes/orçamentos, inclusive em produção)
+foram apagados de propósito pela migration, não migrados.
+**Origem do código**: o código inicial veio de um patch gerado por
+outra sessão do Claude Code, rodando num ambiente sem rede pra
+`binaries.prisma.sh` — não deu pra validar nada lá (nem `prisma
+generate` rodou). Apliquei o patch manualmente aqui (onde tenho rede)
+e validei de ponta a ponta antes de considerar pronto, encontrando e
+corrigindo **dois bugs reais que o patch original tinha**:
+- `enum Role` no `schema.prisma` — **SQLite não suporta enum nativo no
+  Prisma**; virou `role String @default("REPRESENTANTE")`, com o
+  valor validado só em TypeScript.
+- Cast de tipo faltando no `authorize()` do Credentials provider
+  (`role` vinha `string` do Prisma, mas o tipo `User` do NextAuth
+  espera o literal `"ADMIN" | "REPRESENTANTE"`).
+E um terceiro bug que só apareceu testando em produção de verdade (não
+em dev local nem no build):
+- **`trustHost: true` faltando** em `auth.config.ts` — NextAuth v5 só
+  confia automaticamente no host na Vercel; em qualquer outro host
+  (Railway aqui) todo login falha com "UntrustedHost" (erro 500
+  genérico "problema de configuração do servidor" pro usuário, o erro
+  real só aparece no log do servidor).
+Impacto: `src/lib/session.ts` manteve a mesma assinatura de função
+(`getRepresentanteId()`) por baixo do capô agora chamando `auth()` do
+NextAuth — os 7+ arquivos que já liam a sessão não precisaram mudar.
+Config do NextAuth dividida em `auth.config.ts` (edge-safe, sem
+Prisma/bcrypt — usada pelo `middleware.ts`, que roda no Edge Runtime)
+e `auth.ts` (config completa, usada em Server Actions/Components).
+Arquivos relacionados: `prisma/schema.prisma`,
+`prisma/migrations/20260831003715_login_representantes/migration.sql`,
+`src/auth.ts`, `src/auth.config.ts`, `src/middleware.ts`,
+`src/lib/session.ts`, `src/app/page.tsx`, `src/app/actions.ts`,
+`src/app/admin/`, `prisma/seed.ts`
