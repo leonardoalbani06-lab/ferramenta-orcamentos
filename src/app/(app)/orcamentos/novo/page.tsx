@@ -32,6 +32,7 @@ export default async function NovoOrcamentoPage({
         precoTabelaB: true,
         ipiPercentual: true,
         imagemUrl: true,
+        peso: true,
       },
     }),
   ]);

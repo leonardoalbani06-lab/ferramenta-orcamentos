@@ -78,6 +78,9 @@ model Produto {
   unidade        String? // não veio na planilha original; preencher depois
   codigoBarras   String?
   imagemUrl      String? // ex: /produtos/1078.jpg
+  peso           Float?  // peso unitário em kg — estrutura pronta pra calcular
+                          // o peso bruto do orçamento; ainda não preenchido pra
+                          // nenhum produto (dado virá depois, ver decisions.md)
 
   // preços em centavos
   precoTabelaA   Int      @default(0)

@@ -87,3 +87,33 @@ export async function redefinirSenhaRepresentante(formData: FormData) {
   revalidatePath("/admin/representantes");
   redirect("/admin/representantes?sucesso=" + encodeURIComponent("Senha redefinida."));
 }
+
+// Reatribui o cliente pra outro representante. Só troca o dono do cadastro
+// do cliente (Cliente.representanteId) — decisão do usuário (2026-09-01):
+// os orçamentos já criados continuam como estão (cada um guarda o próprio
+// `representanteId`, de quem montou aquele orçamento na época), só os
+// orçamentos NOVOS desse cliente é que passam a ser do representante novo
+// (naturalmente, porque só quem é dono do cliente consegue selecioná-lo
+// pra montar orçamento — ver `criarOrcamento` em src/app/actions.ts).
+export async function alterarRepresentanteCliente(formData: FormData) {
+  await exigirAdmin();
+
+  const clienteId = String(formData.get("clienteId") ?? "");
+  const representanteId = String(formData.get("representanteId") ?? "");
+  // Caminho da página que chamou (pra revalidar ela também — ex:
+  // /admin/orcamentos/42 — além das listas gerais). Opcional.
+  const paginaAtual = String(formData.get("paginaAtual") ?? "").trim();
+  if (!clienteId || !representanteId) return;
+
+  const [cliente, representante] = await Promise.all([
+    db.cliente.findUnique({ where: { id: clienteId } }),
+    db.representante.findUnique({ where: { id: representanteId } }),
+  ]);
+  if (!cliente || !representante) return;
+
+  await db.cliente.update({ where: { id: clienteId }, data: { representanteId } });
+
+  revalidatePath("/admin/clientes");
+  revalidatePath("/admin/orcamentos");
+  if (paginaAtual.startsWith("/admin/")) revalidatePath(paginaAtual);
+}

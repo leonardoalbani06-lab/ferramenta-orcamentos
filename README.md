@@ -31,10 +31,15 @@ npm run db:studio
 1. Login por usuário/senha (contas criadas só pelo admin, sem autocadastro)
 2. Cadastro/listagem de clientes, isolado por representante
 3. Catálogo navegável (categoria/busca), Tabela A/B, com foto por produto
-4. Montagem e revisão de orçamento (desconto, IPI, ST, frete)
+4. Montagem e revisão de orçamento (desconto, IPI, ST, frete), com
+   calendário próprio pra previsão de entrega e listas fixas pra forma/
+   condição de pagamento e frete; volumes e peso bruto calculados
+   automaticamente a partir dos itens
 5. Geração de PDF no layout do orçamento aprovado de referência
-6. Painel admin (`/admin/representantes`): criar conta de representante,
-   ativar/desativar, redefinir senha
+6. Painel admin: criar conta de representante, ativar/desativar,
+   redefinir senha (`/admin/representantes`); ver todos os clientes e
+   orçamentos de todos os representantes e reatribuir o representante
+   responsável por um cliente (`/admin/clientes`, `/admin/orcamentos`)
 
 ## Estrutura de pastas
 
@@ -48,7 +53,9 @@ src/
 │   ├── actions.ts       # Server Actions
 │   ├── api/auth/[...nextauth]/route.ts
 │   ├── admin/             # exige role ADMIN
-│   │   └── representantes/
+│   │   ├── representantes/
+│   │   ├── clientes/       # todos os clientes, reatribuir representante
+│   │   └── orcamentos/     # todos os orçamentos
 │   └── (app)/           # rotas que exigem login
 │       ├── clientes/
 │       ├── catalogo/

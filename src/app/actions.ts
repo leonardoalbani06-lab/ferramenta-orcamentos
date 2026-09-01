@@ -78,6 +78,19 @@ export async function criarCliente(formData: FormData) {
 
 type ItemInput = { codigo: string; quantidade: number; tabela: string };
 
+// Mesmas opções mostradas nos <select> do formulário (ver OrcamentoBuilder)
+// — validadas de novo aqui pra não gravar valor arbitrário se o formulário
+// for contornado (o app só monta HTML dessas opções, nunca deixa digitar).
+const OPCOES_FORMA_PAGAMENTO = new Set(["Boletos", "Cheque", "Dinheiro", "Pix"]);
+const OPCOES_CONDICAO_PAGAMENTO = new Set([
+  "À vista",
+  "21-28-35",
+  "21-28-35-42",
+  "21-28-35-42-49",
+  "21-28-35-42-49-56",
+]);
+const OPCOES_FRETE = new Set(["CIF", "FOB"]);
+
 export async function criarOrcamento(formData: FormData) {
   const representanteId = await getRepresentanteId();
   if (!representanteId) redirect("/");
@@ -148,15 +161,23 @@ export async function criarOrcamento(formData: FormData) {
   const stValor = Math.round((Number(formData.get("stValor") ?? 0) || 0) * 100);
   const valorTotal = valorProdutos - descontoValor + ipiValor + stValor + freteValor;
 
+  // Volumes e peso bruto nunca vêm do formulário — são sempre recalculados
+  // aqui a partir dos itens/produtos rebuscados no banco (mesma regra de
+  // "nunca confiar no client" já usada pra preço/descrição, ver CLAUDE.md).
+  // Peso fica 0 pros produtos que ainda não têm peso unitário cadastrado.
+  const volumes = itensParaCriar.reduce((acc, i) => acc + i.quantidade, 0);
+  const pesoBruto = itensParaCriar.reduce((acc, i) => {
+    const peso = produtoPorCodigo.get(i.produtoCodigo)?.peso ?? 0;
+    return acc + i.quantidade * peso;
+  }, 0);
+
   const campo = (name: string) => {
     const valor = String(formData.get(name) ?? "").trim();
     return valor || null;
   };
-  const numeroOuNull = (name: string) => {
-    const valor = formData.get(name);
-    if (!valor) return null;
-    const n = Number(valor);
-    return Number.isFinite(n) ? n : null;
+  const opcaoValida = (name: string, opcoesValidas: Set<string>) => {
+    const valor = campo(name);
+    return valor && opcoesValidas.has(valor) ? valor : null;
   };
 
   const orcamento = await db.orcamento.create({
@@ -172,12 +193,12 @@ export async function criarOrcamento(formData: FormData) {
       valorTotal,
       previsaoEntrega: campo("previsaoEntrega"),
       ordemCompra: campo("ordemCompra"),
-      fretePorConta: campo("fretePorConta"),
-      condicaoPagamento: campo("condicaoPagamento"),
-      formaPagamento: campo("formaPagamento"),
+      fretePorConta: opcaoValida("fretePorConta", OPCOES_FRETE),
+      condicaoPagamento: opcaoValida("condicaoPagamento", OPCOES_CONDICAO_PAGAMENTO),
+      formaPagamento: opcaoValida("formaPagamento", OPCOES_FORMA_PAGAMENTO),
       transportadora: campo("transportadora"),
-      volumes: numeroOuNull("volumes") !== null ? Math.trunc(numeroOuNull("volumes")!) : null,
-      pesoBruto: numeroOuNull("pesoBruto"),
+      volumes,
+      pesoBruto,
       observacoes: campo("observacoes"),
       emailCopiaPedido: campo("emailCopiaPedido"),
       emailXmlNfe: campo("emailXmlNfe"),

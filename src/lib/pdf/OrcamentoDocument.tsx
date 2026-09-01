@@ -2,7 +2,7 @@ import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/render
 import path from "node:path";
 import { existsSync, readFileSync } from "node:fs";
 import type { Cliente, ItemOrcamento, Orcamento, Produto, Representante } from "@prisma/client";
-import { formatDateTime, formatDecimal, formatMoney } from "@/lib/format";
+import { formatDateIso, formatDateTime, formatDecimal, formatMoney } from "@/lib/format";
 
 function lerImagemProduto(imagemUrl: string | null): Buffer | undefined {
   if (!imagemUrl) return undefined;
@@ -234,7 +234,7 @@ export function OrcamentoDocument({ orcamento }: { orcamento: OrcamentoCompleto 
             <Campo label="REPRESENTANTE" valor={orcamento.representante.nome} last />
           </View>
           <View style={styles.row}>
-            <Campo label="PREVISÃO DE ENTREGA" valor={orcamento.previsaoEntrega ?? ""} />
+            <Campo label="PREVISÃO DE ENTREGA" valor={formatDateIso(orcamento.previsaoEntrega)} />
             <Campo label="ORDEM DE COMPRA" valor={orcamento.ordemCompra ?? ""} />
             <Campo label="FRETE POR CONTA" valor={orcamento.fretePorConta ?? ""} />
             <Campo label="TRANSPORTADORA" valor={orcamento.transportadora ?? ""} last />

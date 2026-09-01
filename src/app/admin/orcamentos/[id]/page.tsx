@@ -1,27 +1,31 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { getRepresentanteId } from "@/lib/session";
 import { formatDate, formatDateIso, formatDecimal, formatMoney } from "@/lib/format";
 import { ProdutoThumb } from "@/components/ProdutoThumb";
+import { ReatribuirRepresentante } from "@/components/admin/ReatribuirRepresentante";
 
-export default async function OrcamentoDetailPage({
+export default async function OrcamentoAdminDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const representanteId = await getRepresentanteId();
-  if (!representanteId) redirect("/");
 
   const orcamentoId = Number(id);
-  if (!Number.isInteger(orcamentoId)) redirect("/orcamentos");
+  if (!Number.isInteger(orcamentoId)) redirect("/admin/orcamentos");
 
-  const orcamento = await db.orcamento.findFirst({
-    where: { id: orcamentoId, representanteId },
-    include: { cliente: true, itens: { include: { produto: true } } },
-  });
-  if (!orcamento) redirect("/orcamentos");
+  const [orcamento, representantes] = await Promise.all([
+    db.orcamento.findFirst({
+      where: { id: orcamentoId },
+      include: {
+        cliente: { include: { representante: true } },
+        itens: { include: { produto: true } },
+      },
+    }),
+    db.representante.findMany({ orderBy: { nome: "asc" } }),
+  ]);
+  if (!orcamento) redirect("/admin/orcamentos");
 
   const resumoTabelas = resumirTabelas(orcamento.itens.map((i) => i.tabelaUsada));
 
@@ -50,6 +54,22 @@ export default async function OrcamentoDetailPage({
             <p className="text-gray-600">{orcamento.cliente.nomeFantasia}</p>
           )}
           <p className="text-gray-600">CNPJ: {orcamento.cliente.cnpj}</p>
+
+          <div className="mt-3 flex items-center justify-between gap-2 border-t border-brand-cream pt-3">
+            <p className="text-xs text-gray-500">Representante responsável por este cliente</p>
+            <ReatribuirRepresentante
+              clienteId={orcamento.cliente.id}
+              representanteAtualId={orcamento.cliente.representanteId}
+              representantes={representantes}
+              paginaAtual={`/admin/orcamentos/${orcamento.id}`}
+            />
+          </div>
+          {orcamento.cliente.representanteId !== orcamento.representanteId && (
+            <p className="mt-2 text-xs text-gray-400">
+              Este orçamento específico foi montado por outro representante — trocar aqui não
+              altera orçamentos já criados, só o cadastro do cliente e os próximos orçamentos.
+            </p>
+          )}
         </div>
       </section>
 
@@ -151,7 +171,10 @@ export default async function OrcamentoDetailPage({
         </div>
       </section>
 
-      <Link href="/orcamentos" className="text-sm text-gray-500 hover:text-brand-olive hover:underline">
+      <Link
+        href="/admin/orcamentos"
+        className="text-sm text-gray-500 hover:text-brand-olive hover:underline"
+      >
         ← Voltar para orçamentos
       </Link>
     </main>

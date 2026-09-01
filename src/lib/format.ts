@@ -30,3 +30,14 @@ export function formatDecimal(n: number, decimals: number): string {
     maximumFractionDigits: decimals,
   }).format(n);
 }
+
+// `previsaoEntrega` é gravado como string ISO "AAAA-MM-DD" (sem hora, vem
+// do mini calendário em DatePickerField). Formata pra exibição em pt-BR
+// sem passar por `new Date(iso)` — isso interpretaria como UTC e podia
+// voltar um dia a menos no fuso do Brasil.
+export function formatDateIso(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
+  if (!m) return iso;
+  return `${m[3]}/${m[2]}/${m[1]}`;
+}

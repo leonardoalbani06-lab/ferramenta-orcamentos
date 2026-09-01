@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getRepresentanteLogado } from "@/lib/session";
+import { AdminNav } from "@/components/admin/AdminNav";
 import { sairRepresentante } from "../actions";
 
 export default async function AdminLayout({
@@ -30,7 +31,7 @@ export default async function AdminLayout({
               <Link href="/clientes" className="text-brand-cream/80 transition hover:text-brand-gold">
                 Voltar pro app
               </Link>
-              <span className="text-brand-gold">Representantes</span>
+              <AdminNav />
             </nav>
           </div>
 

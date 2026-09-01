@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { criarOrcamento } from "../../../actions";
-import { formatMoney } from "@/lib/format";
+import { formatDecimal, formatMoney } from "@/lib/format";
 import { ProdutoThumb } from "@/components/ProdutoThumb";
+import { DatePickerField } from "@/components/DatePickerField";
 
 type Cliente = { id: string; razaoSocial: string; cnpj: string };
 type Produto = {
@@ -16,8 +17,19 @@ type Produto = {
   precoTabelaB: number;
   ipiPercentual: number | null;
   imagemUrl: string | null;
+  peso: number | null;
 };
 type Tabela = "A" | "B";
+
+const OPCOES_FORMA_PAGAMENTO = ["Boletos", "Cheque", "Dinheiro", "Pix"];
+const OPCOES_CONDICAO_PAGAMENTO = [
+  "À vista",
+  "21-28-35",
+  "21-28-35-42",
+  "21-28-35-42-49",
+  "21-28-35-42-49-56",
+];
+const OPCOES_FRETE = ["CIF", "FOB"];
 
 function toCentavos(texto: string): number {
   const n = parseFloat(texto.replace(",", "."));
@@ -71,9 +83,21 @@ export function OrcamentoBuilder({
         const valorUnitario = tabela === "A" ? p.precoTabelaA : p.precoTabelaB;
         const valorTotal = valorUnitario * quantidade;
         const ipi = Math.round((valorTotal * (p.ipiPercentual ?? 0)) / 100);
-        return { codigo: p.codigo, quantidade, tabela, valorUnitario, valorTotal, ipi };
+        const peso = p.peso ?? 0;
+        return { codigo: p.codigo, quantidade, tabela, valorUnitario, valorTotal, ipi, peso };
       });
   }, [produtos, quantidades, tabelasPorProduto]);
+
+  // Volumes e peso bruto são calculados automaticamente a partir dos itens
+  // selecionados — não são digitados. O servidor recalcula os dois de novo
+  // (nunca confia no que o formulário manda), então isso aqui é só pra
+  // pré-visualização. Peso fica 0 enquanto o cadastro de produtos não tiver
+  // o peso unitário preenchido (estrutura já pronta, ver Produto.peso).
+  const volumesCalculado = itensSelecionados.reduce((acc, i) => acc + i.quantidade, 0);
+  const pesoBrutoCalculado = itensSelecionados.reduce(
+    (acc, i) => acc + i.quantidade * i.peso,
+    0
+  );
 
   const valorProdutos = itensSelecionados.reduce((acc, i) => acc + i.valorTotal, 0);
   const descontoValor = Math.round(
@@ -293,14 +317,34 @@ export function OrcamentoBuilder({
           Outras informações
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Campo label="Previsão de entrega" name="previsaoEntrega" />
+          <DatePickerField label="Previsão de entrega" name="previsaoEntrega" />
           <Campo label="Ordem de compra" name="ordemCompra" />
-          <Campo label="Frete por conta" name="fretePorConta" />
+          <SelectField
+            label="Frete por conta"
+            name="fretePorConta"
+            opcoes={OPCOES_FRETE}
+          />
           <Campo label="Transportadora" name="transportadora" />
-          <Campo label="Forma de pagamento" name="formaPagamento" />
-          <Campo label="Condição de pagamento" name="condicaoPagamento" />
-          <Campo label="Volumes" name="volumes" type="number" />
-          <Campo label="Peso bruto (kg)" name="pesoBruto" type="number" />
+          <SelectField
+            label="Forma de pagamento"
+            name="formaPagamento"
+            opcoes={OPCOES_FORMA_PAGAMENTO}
+          />
+          <SelectField
+            label="Condição de pagamento"
+            name="condicaoPagamento"
+            opcoes={OPCOES_CONDICAO_PAGAMENTO}
+          />
+          <CampoCalculado
+            label="Volumes"
+            valor={String(volumesCalculado)}
+            ajuda="Soma automática da quantidade dos itens selecionados"
+          />
+          <CampoCalculado
+            label="Peso bruto (kg)"
+            valor={formatDecimal(pesoBrutoCalculado, 3)}
+            ajuda="Soma automática de quantidade × peso de cada produto"
+          />
           <Campo label="E-mail cópia do pedido" name="emailCopiaPedido" type="email" />
           <Campo label="E-mail XML NFe" name="emailXmlNfe" type="email" />
           <div className="flex flex-col gap-1 sm:col-span-2">
@@ -482,6 +526,63 @@ function Campo({
         step={type === "number" ? "0.01" : undefined}
         className="rounded-lg border border-brand-olive/20 px-3 py-2.5 outline-none focus:border-brand-olive focus:ring-2 focus:ring-brand-olive/20"
       />
+    </div>
+  );
+}
+
+function SelectField({
+  label,
+  name,
+  opcoes,
+}: {
+  label: string;
+  name: string;
+  opcoes: string[];
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label htmlFor={name} className="text-sm font-medium text-brand-olive">
+        {label}
+      </label>
+      <select
+        id={name}
+        name={name}
+        defaultValue=""
+        className="rounded-lg border border-brand-olive/20 bg-white px-3 py-2.5 outline-none focus:border-brand-olive focus:ring-2 focus:ring-brand-olive/20"
+      >
+        <option value="" disabled>
+          Selecione
+        </option>
+        {opcoes.map((opcao) => (
+          <option key={opcao} value={opcao}>
+            {opcao}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+// Volumes e peso bruto não são digitados — mostram o valor calculado a
+// partir dos itens do orçamento (ver itensSelecionados/volumesCalculado/
+// pesoBrutoCalculado acima). O servidor recalcula os dois de novo ao
+// salvar, então não há input escondido pra "confiar" nesse valor.
+function CampoCalculado({
+  label,
+  valor,
+  ajuda,
+}: {
+  label: string;
+  valor: string;
+  ajuda: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-sm font-medium text-brand-olive">{label}</label>
+      <div className="rounded-lg border border-brand-olive/10 bg-brand-cream/40 px-3 py-2.5 text-brand-oliveDark">
+        {valor}
+      </div>
+      <p className="text-xs text-gray-500">{ajuda}</p>
     </div>
   );
 }

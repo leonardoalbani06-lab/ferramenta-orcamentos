@@ -1,4 +1,69 @@
-# Estado atual — 2026-09-01
+# Estado atual — 2026-09-01 (ver seção "Reatribuição de representante..."
+abaixo pro que mudou nesta sessão; o resto deste arquivo reflete a sessão
+anterior do mesmo dia, que deixou o login em produção)
+
+## Reatribuição de representante + campos de orçamento (implementado nesta sessão, ainda não em produção)
+
+Pedido do usuário: admin poder ver/trocar qual representante é
+responsável por cada cliente, e travar em opções fixas (em vez de texto
+livre) vários campos de "Outras informações" do orçamento. Ver
+`.ai/memory/decisions.md` (duas entradas de 2026-09-01) pro raciocínio
+completo e as perguntas que foram feitas ao usuário antes de implementar.
+
+**O que foi feito:**
+- `Cliente.representanteId` agora pode ser trocado pelo admin — painéis
+  novos `/admin/clientes` (lista todos os clientes de todos os
+  representantes, com select de reatribuição inline) e
+  `/admin/orcamentos` + `/admin/orcamentos/[id]` (mesma ideia pros
+  orçamentos; o detalhe mostra e deixa trocar o representante
+  responsável pelo CLIENTE daquele orçamento). `/admin/representantes`
+  continua existindo como antes. Nova nav (`AdminNav.tsx`) alterna entre
+  os três.
+- Trocar o representante NÃO mexe em orçamentos já criados (cada um
+  guarda seu próprio `representanteId` de quem montou na hora) — só o
+  cadastro do cliente e os orçamentos futuros passam a ser do
+  representante novo. Decisão explícita do usuário.
+- `/orcamentos/[id]/pdf` (rota compartilhada com o app normal) passou a
+  liberar admin baixar PDF de qualquer orçamento, não só os próprios.
+- No formulário de "Novo orçamento": "Previsão de entrega" virou um mini
+  calendário próprio (`DatePickerField.tsx`, sem lib externa, cores da
+  marca); "Forma de pagamento", "Condição de pagamento" e "Frete por
+  conta" viraram `<select>` com opções fixas (Boletos/Cheque/Dinheiro/
+  Pix; à vista/21-28-35/.../21-28-35-42-49-56; CIF/FOB — o pedido
+  original só citava CIF, o usuário confirmou incluir FOB também).
+  "Volumes" e "Peso bruto" pararam de ser digitáveis — calculados a
+  partir dos itens (volumes = soma das quantidades; peso bruto = soma
+  de quantidade × peso unitário) e SEMPRE recalculados no servidor
+  (nunca confia no valor vindo do form, mesma regra já usada pra preço).
+- `Produto` ganhou `peso Float?` (nullable) — estrutura pronta pro
+  cálculo de peso bruto, mas nenhum produto tem peso preenchido ainda
+  (usuário vai informar depois). Até lá, peso bruto calcula como 0.
+
+**Bloqueio conhecido desta sessão (mesmo da sessão anterior — container
+cloud sem rede pra `binaries.prisma.sh`)**: de novo não deu pra rodar
+`prisma generate`/`migrate dev`/`next build` aqui — confirmado tentando
+(`npm install` funciona normal, mas o download do engine do Prisma dá
+403 Forbidden). Validação possível nesta sessão: `tsc --noEmit`
+comparado com um baseline tirado ANTES das mudanças (só sobraram os
+mesmos erros esperados de Prisma Client não gerado, com números de
+linha deslocados + as mesmas categorias de erro nos arquivos novos) e
+`eslint` limpo (zero erros/warnings novos) em todos os arquivos
+criados/alterados. **Antes de considerar isso pronto, alguém com rede
+boa (local ou o build do Railway) precisa rodar**: `npx prisma generate`,
+`npx prisma migrate deploy` (ou `dev` local) e `npm run build`, e só
+então testar o fluxo de admin (reatribuir representante, novo orçamento
+com os campos novos) de verdade.
+
+**Git**: código commitado localmente nesta sessão, mas **esta sessão
+também não tem permissão de push** pro repositório (mesmo bloqueio da
+sessão do login — só clone público de leitura). Patch completo
+(`git format-patch`) salvo no projeto Claude em
+`claude/reassign-representante-e-orcamento-campos.patch`, igual foi
+feito com o login.
+
+---
+
+# Estado em 2026-09-01 (sessão anterior, login em produção)
 
 ## Funcionando
 
@@ -51,6 +116,9 @@ escolha única. Fotos de produto: 42/51 SKUs.
 
 ## Pendente / conhecido
 
+- **Validar e dar push nas mudanças desta sessão (reatribuição de
+  representante + campos de orçamento)** — ver seção no topo deste
+  arquivo. Bloqueia produção.
 - **Backup automático do volume NÃO configurado ainda** — foi
   combinado com o usuário (Railway tem backup Daily/Weekly/Monthly por
   volume, configurado na aba "Backups" das Settings do serviço, só
@@ -60,6 +128,9 @@ escolha única. Fotos de produto: 42/51 SKUs.
   1078, 1078/1.
 - **7 códigos com foto mas sem cadastro no catálogo**: 0610, 1981,
   1982, 2602, 2907, 2909, 3009. Fotos já em `public/produtos/`.
+- **Peso unitário dos produtos**: nenhum produto tem `peso` preenchido
+  ainda (campo novo desta sessão) — peso bruto do orçamento calcula
+  como 0 até isso ser informado.
 - **Gerenciador de Catálogo → integração de volta**: quando o usuário
   terminar de organizar categoria/marca/unidade lá e exportar o JSON,
   falta migrar `Produto.categoria` (hoje texto único) pra
@@ -70,11 +141,14 @@ escolha única. Fotos de produto: 42/51 SKUs.
 
 ## Próximo passo recomendado
 
-1. Configurar backup automático do volume nos dois projetos Railway
+1. Rodar `prisma generate`/`migrate`/`build` num ambiente com rede
+   normal, dar push, e testar de ponta a ponta o que foi feito nesta
+   sessão (ver seção no topo).
+2. Configurar backup automático do volume nos dois projetos Railway
    (Daily é suficiente).
-2. Avisar o usuário a trocar a senha da conta admin de produção pelo
+3. Avisar o usuário a trocar a senha da conta admin de produção pelo
    painel `/admin/representantes` assim que possível.
-3. Cadastrar os representantes reais (hoje só existe a conta admin em
+4. Cadastrar os representantes reais (hoje só existe a conta admin em
    produção).
-4. Aguardar o JSON do Gerenciador de Catálogo pra migrar
+5. Aguardar o JSON do Gerenciador de Catálogo pra migrar
    categoria/marca.

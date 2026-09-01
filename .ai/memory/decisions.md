@@ -267,3 +267,75 @@ Arquivos relacionados: `prisma/schema.prisma`,
 `src/auth.ts`, `src/auth.config.ts`, `src/middleware.ts`,
 `src/lib/session.ts`, `src/app/page.tsx`, `src/app/actions.ts`,
 `src/app/admin/`, `prisma/seed.ts`
+
+## 2026-09-01
+Decisão: admin pode reatribuir o representante responsável por um
+cliente (`Cliente.representanteId`), com painéis novos e separados
+`/admin/clientes` e `/admin/orcamentos` (visão de todos os
+representantes) — além do já existente `/admin/representantes`.
+Motivo: pedido direto do usuário — hoje `/clientes` e `/orcamentos`
+(rotas normais do app) só mostram os cadastros do representante
+logado, inclusive pra quem é admin; era preciso uma visão geral.
+Decisões confirmadas com o usuário antes de implementar:
+(1) telas separadas por entidade dentro de `/admin` (não mesclar a
+visão "todos os representantes" nas rotas normais `/clientes`/
+`/orcamentos`, que continuam mostrando só os cadastros de quem tá
+logado, mesmo pra admin); (2) reatribuir o representante troca só
+`Cliente.representanteId` — não mexe em orçamentos já criados (cada
+`Orcamento` guarda seu próprio `representanteId`, de quem montou
+naquela hora); os PRÓXIMOS orçamentos desse cliente é que vão ser do
+representante novo, naturalmente, porque só quem é dono do cliente
+consegue selecioná-lo em "Novo orçamento" (`criarOrcamento` continua
+filtrando `cliente` por `representanteId` de quem tá logado).
+Impacto: `alterarRepresentanteCliente` (`src/app/admin/actions.ts`)
+confere admin (`exigirAdmin`) e faz o update; componente
+`ReatribuirRepresentante` (select que já submete no `onChange`) é
+reusado tanto na lista de `/admin/clientes` quanto no detalhe de
+`/admin/orcamentos/[id]`. `/orcamentos/[id]/pdf` (rota compartilhada)
+passou a liberar admin baixar o PDF de orçamento de qualquer
+representante — antes filtrava sempre pelo `representanteId` da
+sessão.
+Arquivos relacionados: `src/app/admin/actions.ts`,
+`src/app/admin/clientes/`, `src/app/admin/orcamentos/`,
+`src/components/admin/ReatribuirRepresentante.tsx`,
+`src/components/admin/AdminNav.tsx`, `src/app/admin/layout.tsx`,
+`src/app/(app)/orcamentos/[id]/pdf/route.tsx`
+
+## 2026-09-01
+Decisão: campos de "Outras informações" do orçamento deixaram de ser
+texto livre onde fazia sentido travar num padrão: "Previsão de
+entrega" virou um mini calendário próprio (componente
+`DatePickerField`, sem lib externa — ver motivo de dependência
+abaixo), "Forma de pagamento" (Boletos/Cheque/Dinheiro/Pix),
+"Condição de pagamento" (à vista / 21-28-35 / ... / 21-28-35-42-49-56)
+e "Frete por conta" (CIF/FOB, confirmado com o usuário — pedido
+original só citava CIF) viraram `<select>` com opções fixas. Volumes
+e peso bruto pararam de ser digitáveis: são sempre calculados a
+partir dos itens do orçamento (volumes = soma das quantidades; peso
+bruto = soma de quantidade × peso unitário do produto) — e, seguindo
+a mesma regra de "nunca confiar no client" já usada pra preço/
+descrição, o servidor SEMPRE recalcula os dois de novo em
+`criarOrcamento`, ignorando qualquer valor que viesse do formulário.
+Motivo: pedido direto do usuário, com a ressalva de que o peso
+unitário de cada produto ainda não foi informado — por isso peso
+bruto calcula como 0 até isso ser preenchido, mas a estrutura já fica
+pronta.
+Impacto: `Produto` ganhou `peso Float?` (nullable, igual ao padrão já
+usado pra NCM/unidade/código de barras — dado incompleto na origem,
+preenchido depois). `previsaoEntrega` continua `String?` no banco,
+mas agora sempre no formato ISO "AAAA-MM-DD" (sem hora) em vez de
+texto livre — formatado pra pt-BR na exibição via `formatDateIso`
+(`src/lib/format.ts`), usado tanto na tela quanto no PDF.
+Sem lib externa pro calendário: nem essa sessão nem a anterior
+conseguiram validar `npm install` de pacote novo + build de ponta a
+ponta (mesmo bloqueio de rede pra `binaries.prisma.sh`, ver seção
+"Bloqueio conhecido" em current-state.md) — manter o componente
+autocontido (só React + Tailwind) evita esse risco de validação.
+Arquivos relacionados: `prisma/schema.prisma`,
+`prisma/migrations/20260901130000_produto_peso/migration.sql`,
+`src/components/DatePickerField.tsx`,
+`src/app/(app)/orcamentos/novo/OrcamentoBuilder.tsx`,
+`src/app/actions.ts`, `src/lib/format.ts`,
+`src/app/(app)/orcamentos/[id]/page.tsx`,
+`src/app/admin/orcamentos/[id]/page.tsx`,
+`src/lib/pdf/OrcamentoDocument.tsx`

@@ -1,39 +1,62 @@
-# Última sessão — 2026-09-01: Deploy em produção + login real
+# Última sessão — 2026-09-01: Reatribuição de representante + campos de orçamento
 
 ## O que foi feito
 
-- **Deploy dos dois projetos na Railway**, público de verdade:
-  - Ferramenta de Orçamentos: https://ferramenta-orcamentos-production.up.railway.app
-  - Gerenciador de Catálogo: https://gerenciador-catalogo-production.up.railway.app
-  - Repos GitHub criados pelo usuário, volume persistente `/data` pro
-    SQLite em cada serviço, deploy automático a cada push.
-  - Corrigidos bugs que só apareciam em build/deploy de produção (não
-    em `npm run dev`): `<a>` interno virando erro de lint no build,
-    `archive/` sendo type-checked, seed do Gerenciador de Catálogo
-    lendo caminho absoluto do Windows, home do Gerenciador sem
-    `force-dynamic`.
-- **Login real por usuário/senha** substituindo a identificação por
-  nome sem senha — NextAuth.js v5, painel `/admin/representantes`.
-  Código veio de um patch de outra sessão (sem rede pra validar nada);
-  apliquei aqui, validei de ponta a ponta, e corrigi 3 bugs reais que
-  o patch tinha: `enum` do Prisma incompatível com SQLite, cast de
-  tipo faltando, e `trustHost` faltando (só aparece testando em
-  produção de verdade).
+- `prisma/schema.prisma`: `Produto` ganhou `peso` (Float?, kg) —
+  estrutura pronta pro cálculo automático de peso bruto, dado ainda
+  não preenchido. Migration à mão
+  (`prisma/migrations/20260901130000_produto_peso/`), só `ALTER TABLE
+  ADD COLUMN`, não apaga nada.
+- `src/app/admin/actions.ts`: nova Server Action
+  `alterarRepresentanteCliente` (troca `Cliente.representanteId`, com
+  `exigirAdmin()`).
+- Painéis admin novos: `/admin/clientes` (lista todos os clientes de
+  todos os representantes, com select de reatribuição inline) e
+  `/admin/orcamentos` + `/admin/orcamentos/[id]` (mesma ideia pros
+  orçamentos, com o representante responsável pelo cliente visível e
+  editável no detalhe). `AdminNav.tsx` novo alterna entre
+  Representantes/Clientes/Orçamentos.
+- `/orcamentos/[id]/pdf`: passou a liberar admin baixar PDF de
+  qualquer orçamento (antes só o próprio).
+- `OrcamentoBuilder.tsx` ("Novo orçamento" → "Outras informações"):
+  - "Previsão de entrega" → `DatePickerField.tsx` novo (mini
+    calendário próprio, sem lib externa, cores da marca).
+  - "Forma de pagamento", "Condição de pagamento", "Frete por conta" →
+    `<select>` com opções fixas (a lista completa está em
+    `.ai/memory/decisions.md`, entrada 2026-09-01).
+  - "Volumes" e "Peso bruto" pararam de ser digitáveis — calculados a
+    partir dos itens, e sempre recalculados no servidor
+    (`src/app/actions.ts`) por segurança.
+- `src/lib/format.ts`: `formatDateIso` novo (formata a string ISO
+  "AAAA-MM-DD" do calendário pra pt-BR, usado na tela e no PDF).
 
 ## Arquivos alterados
 
-Ver `.ai/memory/decisions.md` (entradas 2026-08-20 e 2026-09-01).
+Ver `.ai/memory/decisions.md` (duas entradas de 2026-09-01) pra lista
+completa e o porquê de cada decisão.
 
 ## Problemas
 
-Nenhum sem solução. Todos os bugs encontrados foram corrigidos e
-revalidados (build local + teste real em produção via curl simulando
-o form, não só revisão de código).
+**Rede bloqueada pra `binaries.prisma.sh` nesta sessão** (mesmo
+bloqueio da sessão anterior, do login) — não deu pra rodar `prisma
+generate`, `prisma migrate dev` nem `next build` aqui. Confirmado
+tentando: `npm install` funciona normal, mas o download do engine do
+Prisma dá 403 Forbidden. Validado com `tsc --noEmit` (comparado a um
+baseline tirado antes das mudanças — só sobraram erros da mesma
+categoria dos já esperados, por causa do Prisma Client não gerado) e
+`eslint` limpo em todos os arquivos novos/alterados, mas **não foi
+validado compilando/rodando de verdade**. Isso é bloqueante antes de
+considerar a tarefa concluída.
+
+**Push pro GitHub**: esta sessão também só tem clone público de
+leitura, sem permissão de escrita (usuário optou por eu deixar tudo
+pronto localmente e ele dar o push depois — mesmo fluxo já usado pro
+login). Patch completo salvo no projeto Claude em
+`claude/reassign-representante-e-orcamento-campos.patch`.
 
 ## Próximo passo
 
-1. Configurar backup automático do volume nos dois projetos Railway
-   (combinado, ainda não feito — ver `.ai/tasks/current.md`).
-2. Usuário trocar a senha da conta admin de produção.
-3. Cadastrar representantes reais.
-4. Aguardar JSON do Gerenciador de Catálogo pra migrar categoria/marca.
+Ver checklist em `.ai/tasks/current.md` — rodar `prisma generate`/
+`migrate`/`build` num ambiente com rede normal (local do usuário ou
+build do Railway), dar o push, e testar manualmente o fluxo de
+reatribuição de representante e os campos novos do orçamento.
