@@ -171,12 +171,20 @@ export default async function OrcamentoAdminDetailPage({
         </div>
       </section>
 
-      <Link
-        href="/admin/orcamentos"
-        className="text-sm text-gray-500 hover:text-brand-olive hover:underline"
-      >
-        ← Voltar para orçamentos
-      </Link>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+        <Link
+          href={`/admin/clientes/${orcamento.clienteId}`}
+          className="text-sm text-gray-500 hover:text-brand-olive hover:underline"
+        >
+          ← Voltar para o histórico do cliente
+        </Link>
+        <Link
+          href="/admin/orcamentos"
+          className="text-sm text-gray-500 hover:text-brand-olive hover:underline"
+        >
+          ← Voltar para todos os orçamentos
+        </Link>
+      </div>
     </main>
   );
 }
