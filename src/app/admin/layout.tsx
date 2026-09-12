@@ -37,6 +37,13 @@ export default async function AdminLayout({
 
           <div className="flex items-center gap-4">
             <p className="hidden text-sm text-brand-cream/60 sm:block">{representante.nome}</p>
+            <a
+              href="/admin/backup"
+              className="rounded border border-brand-gold/40 px-3 py-1.5 text-xs font-medium text-brand-gold transition hover:bg-brand-gold/10"
+              title="Baixa uma cópia do banco de dados atual (backup manual)"
+            >
+              ⬇ Backup
+            </a>
             <form action={sairRepresentante}>
               <button
                 type="submit"
