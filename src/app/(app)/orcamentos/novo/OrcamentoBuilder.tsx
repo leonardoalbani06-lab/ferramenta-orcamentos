@@ -6,6 +6,7 @@ import { criarOrcamento } from "../../../actions";
 import { formatDecimal, formatMoney } from "@/lib/format";
 import { ProdutoThumb } from "@/components/ProdutoThumb";
 import { DatePickerField } from "@/components/DatePickerField";
+import { ObservacaoModal } from "@/components/ObservacaoModal";
 
 type Cliente = { id: string; razaoSocial: string; cnpj: string };
 type Produto = {
@@ -50,6 +51,8 @@ export function OrcamentoBuilder({
   const [busca, setBusca] = useState("");
   const [quantidades, setQuantidades] = useState<Record<string, number>>({});
   const [tabelasPorProduto, setTabelasPorProduto] = useState<Record<string, Tabela>>({});
+  const [observacoesPorProduto, setObservacoesPorProduto] = useState<Record<string, string>>({});
+  const [produtoObservacaoAberto, setProdutoObservacaoAberto] = useState<string | null>(null);
   const [descontoPercentual, setDescontoPercentual] = useState("");
   const [freteValor, setFreteValor] = useState("");
   const [stValor, setStValor] = useState("");
@@ -109,8 +112,15 @@ export function OrcamentoBuilder({
   const valorTotal = valorProdutos - descontoValor + ipiValor + freteCent + stCent;
 
   const itensJson = JSON.stringify(
-    itensSelecionados.map((i) => ({ codigo: i.codigo, quantidade: i.quantidade, tabela: i.tabela }))
+    itensSelecionados.map((i) => ({
+      codigo: i.codigo,
+      quantidade: i.quantidade,
+      tabela: i.tabela,
+      observacao: observacoesPorProduto[i.codigo] || undefined,
+    }))
   );
+
+  const produtoObservacao = produtos.find((p) => p.codigo === produtoObservacaoAberto) ?? null;
 
   function setQuantidade(codigo: string, valor: string) {
     const n = Math.max(0, Math.trunc(Number(valor) || 0));
@@ -205,28 +215,38 @@ export function OrcamentoBuilder({
             return (
               <li
                 key={p.codigo}
-                className={`rounded-xl border p-3 ${
+                onClick={() => qtd > 0 && setProdutoObservacaoAberto(p.codigo)}
+                className={`rounded-xl border p-3 ${qtd > 0 ? "cursor-pointer" : ""} ${
                   qtd > 0 ? "border-brand-gold bg-brand-limeLight/30" : "border-brand-cream bg-white"
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <ProdutoThumb imagemUrl={p.imagemUrl} descricao={p.descricao} size={48} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-brand-olive">{p.descricao}</p>
+                    <p className="truncate text-sm font-medium text-brand-olive">
+                      {p.descricao}
+                      {observacoesPorProduto[p.codigo] && (
+                        <span className="ml-1" title="Tem observação">
+                          📝
+                        </span>
+                      )}
+                    </p>
                     <p className="text-xs text-gray-500">
                       SKU {p.codigo} · {formatMoney(preco)}
                     </p>
                   </div>
-                  <TabelaToggle
-                    valor={tabela}
-                    onChange={(t) => setTabelaProduto(p.codigo, t)}
-                  />
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <TabelaToggle
+                      valor={tabela}
+                      onChange={(t) => setTabelaProduto(p.codigo, t)}
+                    />
+                  </div>
                 </div>
                 <div className="mt-2 flex items-center justify-between">
                   <p className="text-sm font-medium text-brand-olive">
                     {qtd > 0 ? formatMoney(preco * qtd) : ""}
                   </p>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
                       onClick={() => ajustarQuantidade(p.codigo, -1)}
@@ -252,6 +272,11 @@ export function OrcamentoBuilder({
                     </button>
                   </div>
                 </div>
+                {qtd === 0 && (
+                  <p className="mt-1 text-[11px] text-gray-400">
+                    Selecione uma quantidade pra poder adicionar uma observação.
+                  </p>
+                )}
               </li>
             );
           })}
@@ -278,21 +303,33 @@ export function OrcamentoBuilder({
                 const preco = tabela === "A" ? p.precoTabelaA : p.precoTabelaB;
                 const qtd = quantidades[p.codigo] ?? 0;
                 return (
-                  <tr key={p.codigo} className="border-b border-brand-cream/60">
+                  <tr
+                    key={p.codigo}
+                    onClick={() => qtd > 0 && setProdutoObservacaoAberto(p.codigo)}
+                    title={qtd > 0 ? "Clique pra adicionar/ver a observação deste item" : undefined}
+                    className={`border-b border-brand-cream/60 ${qtd > 0 ? "cursor-pointer hover:bg-brand-cream/10" : ""}`}
+                  >
                     <td className="py-2 px-3">
                       <ProdutoThumb imagemUrl={p.imagemUrl} descricao={p.descricao} size={32} />
                     </td>
                     <td className="py-2 px-3 text-gray-500">{p.codigo}</td>
-                    <td className="py-2 px-3">{p.descricao}</td>
-                    <td className="py-2 px-3 text-gray-600">{p.unidade ?? "—"}</td>
                     <td className="py-2 px-3">
+                      {p.descricao}
+                      {observacoesPorProduto[p.codigo] && (
+                        <span className="ml-1" title="Tem observação">
+                          📝
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-2 px-3 text-gray-600">{p.unidade ?? "—"}</td>
+                    <td className="py-2 px-3" onClick={(e) => e.stopPropagation()}>
                       <TabelaToggle
                         valor={tabela}
                         onChange={(t) => setTabelaProduto(p.codigo, t)}
                       />
                     </td>
                     <td className="py-2 px-3">{formatMoney(preco)}</td>
-                    <td className="py-2 px-3">
+                    <td className="py-2 px-3" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="number"
                         min={0}
@@ -459,6 +496,22 @@ export function OrcamentoBuilder({
           </button>
         </div>
       </div>
+
+      {produtoObservacao && (
+        <ObservacaoModal
+          produtoDescricao={produtoObservacao.descricao}
+          valorInicial={observacoesPorProduto[produtoObservacao.codigo] ?? ""}
+          onSalvar={(texto) => {
+            setObservacoesPorProduto((prev) => {
+              const proximo = { ...prev };
+              if (texto) proximo[produtoObservacao.codigo] = texto;
+              else delete proximo[produtoObservacao.codigo];
+              return proximo;
+            });
+          }}
+          onFechar={() => setProdutoObservacaoAberto(null)}
+        />
+      )}
     </form>
   );
 }
