@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { criarOrcamento } from "../../../actions";
+import { atualizarOrcamento, criarOrcamento } from "../../../actions";
 import { formatDecimal, formatMoney } from "@/lib/format";
 import { ProdutoThumb } from "@/components/ProdutoThumb";
 import { DatePickerField } from "@/components/DatePickerField";
@@ -22,6 +22,28 @@ type Produto = {
 };
 type Tabela = "A" | "B";
 
+// Item já existente de um orçamento sendo editado (ver EditarOrcamentoPage)
+// — popula os estados de quantidade/tabela/observação na primeira render.
+type ItemInicial = { codigo: string; quantidade: number; tabela: Tabela; observacao?: string | null };
+
+// Demais campos de um orçamento existente, pra pré-preencher o formulário
+// no modo de edição (ver EditarOrcamentoPage). Tudo opcional porque em
+// modo "criar" (orcamentoIdParaEditar ausente) nada disso é passado.
+type ValoresIniciais = {
+  previsaoEntrega?: string | null;
+  ordemCompra?: string | null;
+  fretePorConta?: string | null;
+  transportadora?: string | null;
+  formaPagamento?: string | null;
+  condicaoPagamento?: string | null;
+  emailCopiaPedido?: string | null;
+  emailXmlNfe?: string | null;
+  observacoes?: string | null;
+  descontoPercentual?: number | null;
+  freteValor?: number | null; // centavos
+  stValor?: number | null; // centavos
+};
+
 const OPCOES_FORMA_PAGAMENTO = ["Boletos", "Cheque", "Dinheiro", "Pix"];
 const OPCOES_CONDICAO_PAGAMENTO = [
   "À vista",
@@ -37,25 +59,55 @@ function toCentavos(texto: string): number {
   return Number.isFinite(n) ? Math.round(n * 100) : 0;
 }
 
+// Centavos -> string com ponto decimal, formato que <input type="number">
+// espera (ex: 123456 -> "1234.56"). Vazio quando não há valor, pra não
+// mostrar "0.00" num orçamento novo sem frete/ST informado.
+function centavosParaTexto(valor: number | null | undefined): string {
+  if (!valor) return "";
+  return (valor / 100).toFixed(2);
+}
+
 export function OrcamentoBuilder({
   clientes,
   produtos,
   clienteIdInicial,
+  orcamentoIdParaEditar,
+  itensIniciais,
+  valoresIniciais,
 }: {
   clientes: Cliente[];
   produtos: Produto[];
   clienteIdInicial?: string;
+  // Presente só quando o formulário está editando um orçamento já salvo
+  // (ver /orcamentos/[id]/editar e /admin/orcamentos/[id]/editar) — muda o
+  // texto dos botões, o destino do "Cancelar" e qual server action o
+  // formulário chama ao salvar.
+  orcamentoIdParaEditar?: number;
+  itensIniciais?: ItemInicial[];
+  valoresIniciais?: ValoresIniciais;
 }) {
+  const modoEdicao = orcamentoIdParaEditar !== undefined;
+
   const [clienteId, setClienteId] = useState(clienteIdInicial ?? clientes[0]?.id ?? "");
   const [categoria, setCategoria] = useState("");
   const [busca, setBusca] = useState("");
-  const [quantidades, setQuantidades] = useState<Record<string, number>>({});
-  const [tabelasPorProduto, setTabelasPorProduto] = useState<Record<string, Tabela>>({});
-  const [observacoesPorProduto, setObservacoesPorProduto] = useState<Record<string, string>>({});
+  const [quantidades, setQuantidades] = useState<Record<string, number>>(() =>
+    Object.fromEntries((itensIniciais ?? []).map((i) => [i.codigo, i.quantidade]))
+  );
+  const [tabelasPorProduto, setTabelasPorProduto] = useState<Record<string, Tabela>>(() =>
+    Object.fromEntries((itensIniciais ?? []).map((i) => [i.codigo, i.tabela]))
+  );
+  const [observacoesPorProduto, setObservacoesPorProduto] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      (itensIniciais ?? []).filter((i) => i.observacao).map((i) => [i.codigo, i.observacao as string])
+    )
+  );
   const [produtoObservacaoAberto, setProdutoObservacaoAberto] = useState<string | null>(null);
-  const [descontoPercentual, setDescontoPercentual] = useState("");
-  const [freteValor, setFreteValor] = useState("");
-  const [stValor, setStValor] = useState("");
+  const [descontoPercentual, setDescontoPercentual] = useState(
+    valoresIniciais?.descontoPercentual ? String(valoresIniciais.descontoPercentual) : ""
+  );
+  const [freteValor, setFreteValor] = useState(centavosParaTexto(valoresIniciais?.freteValor));
+  const [stValor, setStValor] = useState(centavosParaTexto(valoresIniciais?.stValor));
 
   const categorias = useMemo(
     () => Array.from(new Set(produtos.map((p) => p.categoria))).sort(),
@@ -138,8 +190,13 @@ export function OrcamentoBuilder({
     setTabelasPorProduto((prev) => ({ ...prev, [codigo]: tabela }));
   }
 
+  const linkCancelar = modoEdicao ? `/orcamentos/${orcamentoIdParaEditar}` : "/orcamentos";
+
   return (
-    <form action={criarOrcamento} className="flex flex-col gap-8 pb-28 sm:pb-0">
+    <form
+      action={modoEdicao ? atualizarOrcamento.bind(null, orcamentoIdParaEditar) : criarOrcamento}
+      className="flex flex-col gap-8 pb-28 sm:pb-0"
+    >
       <input type="hidden" name="itens" value={itensJson} />
 
       <section className="flex flex-col gap-1">
@@ -354,23 +411,38 @@ export function OrcamentoBuilder({
           Outras informações
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <DatePickerField label="Previsão de entrega" name="previsaoEntrega" />
-          <Campo label="Ordem de compra" name="ordemCompra" />
+          <DatePickerField
+            label="Previsão de entrega"
+            name="previsaoEntrega"
+            defaultValue={valoresIniciais?.previsaoEntrega}
+          />
+          <Campo
+            label="Ordem de compra"
+            name="ordemCompra"
+            defaultValue={valoresIniciais?.ordemCompra}
+          />
           <SelectField
             label="Frete por conta"
             name="fretePorConta"
             opcoes={OPCOES_FRETE}
+            defaultValue={valoresIniciais?.fretePorConta}
           />
-          <Campo label="Transportadora" name="transportadora" />
+          <Campo
+            label="Transportadora"
+            name="transportadora"
+            defaultValue={valoresIniciais?.transportadora}
+          />
           <SelectField
             label="Forma de pagamento"
             name="formaPagamento"
             opcoes={OPCOES_FORMA_PAGAMENTO}
+            defaultValue={valoresIniciais?.formaPagamento}
           />
           <SelectField
             label="Condição de pagamento"
             name="condicaoPagamento"
             opcoes={OPCOES_CONDICAO_PAGAMENTO}
+            defaultValue={valoresIniciais?.condicaoPagamento}
           />
           <CampoCalculado
             label="Volumes"
@@ -382,8 +454,18 @@ export function OrcamentoBuilder({
             valor={formatDecimal(pesoBrutoCalculado, 3)}
             ajuda="Soma automática de quantidade × peso de cada produto"
           />
-          <Campo label="E-mail cópia do pedido" name="emailCopiaPedido" type="email" />
-          <Campo label="E-mail XML NFe" name="emailXmlNfe" type="email" />
+          <Campo
+            label="E-mail cópia do pedido"
+            name="emailCopiaPedido"
+            type="email"
+            defaultValue={valoresIniciais?.emailCopiaPedido}
+          />
+          <Campo
+            label="E-mail XML NFe"
+            name="emailXmlNfe"
+            type="email"
+            defaultValue={valoresIniciais?.emailXmlNfe}
+          />
           <div className="flex flex-col gap-1 sm:col-span-2">
             <label className="text-sm font-medium text-brand-olive" htmlFor="observacoes">
               Observação
@@ -392,6 +474,7 @@ export function OrcamentoBuilder({
               id="observacoes"
               name="observacoes"
               rows={2}
+              defaultValue={valoresIniciais?.observacoes ?? undefined}
               className="rounded-lg border border-brand-olive/20 px-3 py-2.5 outline-none focus:border-brand-olive focus:ring-2 focus:ring-brand-olive/20"
             />
           </div>
@@ -468,10 +551,10 @@ export function OrcamentoBuilder({
           disabled={!clienteId || itensSelecionados.length === 0}
           className="rounded-lg bg-brand-olive px-6 py-2.5 font-medium text-white transition hover:bg-brand-oliveDark disabled:opacity-40"
         >
-          Salvar orçamento
+          {modoEdicao ? "Salvar alterações" : "Salvar orçamento"}
         </button>
         <Link
-          href="/orcamentos"
+          href={linkCancelar}
           className="rounded-lg px-4 py-2.5 text-gray-600 transition hover:text-brand-olive hover:underline"
         >
           Cancelar
@@ -562,10 +645,12 @@ function Campo({
   label,
   name,
   type = "text",
+  defaultValue,
 }: {
   label: string;
   name: string;
   type?: string;
+  defaultValue?: string | null;
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -577,6 +662,7 @@ function Campo({
         name={name}
         type={type}
         step={type === "number" ? "0.01" : undefined}
+        defaultValue={defaultValue ?? undefined}
         className="rounded-lg border border-brand-olive/20 px-3 py-2.5 outline-none focus:border-brand-olive focus:ring-2 focus:ring-brand-olive/20"
       />
     </div>
@@ -587,10 +673,12 @@ function SelectField({
   label,
   name,
   opcoes,
+  defaultValue,
 }: {
   label: string;
   name: string;
   opcoes: string[];
+  defaultValue?: string | null;
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -600,7 +688,7 @@ function SelectField({
       <select
         id={name}
         name={name}
-        defaultValue=""
+        defaultValue={defaultValue ?? ""}
         className="rounded-lg border border-brand-olive/20 bg-white px-3 py-2.5 outline-none focus:border-brand-olive focus:ring-2 focus:ring-brand-olive/20"
       >
         <option value="" disabled>
