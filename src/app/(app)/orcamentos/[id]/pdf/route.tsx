@@ -35,6 +35,17 @@ export async function GET(
     return NextResponse.redirect(new URL("/orcamentos", request.url));
   }
 
+  // Primeira vez que o PDF desse orçamento é gerado: trava as observações
+  // por item a partir de agora (ver `salvarObservacaoItem` em actions.ts) —
+  // evita que o texto mude depois que o PDF já foi entregue/impresso.
+  // Downloads seguintes não mexem mais nessa data.
+  if (!orcamento.pdfGeradoEm) {
+    await db.orcamento.update({
+      where: { id: orcamento.id },
+      data: { pdfGeradoEm: new Date() },
+    });
+  }
+
   const buffer = await renderToBuffer(<OrcamentoDocument orcamento={orcamento} />);
 
   return new NextResponse(new Uint8Array(buffer), {
