@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { formatDate, formatDateIso, formatDecimal, formatMoney } from "@/lib/format";
 import { ItensOrcamentoList } from "@/components/ItensOrcamentoList";
 import { ReatribuirRepresentante } from "@/components/admin/ReatribuirRepresentante";
+import { AcoesPdf } from "@/components/AcoesPdf";
 
 export default async function OrcamentoAdminDetailPage({
   params,
@@ -35,16 +36,28 @@ export default async function OrcamentoAdminDetailPage({
         <h1 className="font-heading text-2xl font-bold text-brand-olive">
           Orçamento nº {orcamento.id}
         </h1>
-        
-          href={`/orcamentos/${orcamento.id}/pdf`}
-          className="rounded-lg bg-brand-olive px-4 py-2.5 text-center text-sm font-medium text-white transition hover:bg-brand-oliveDark"
-        >
-          Baixar PDF
-        </a>
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex gap-2">
+            {!orcamento.pdfGeradoEm && (
+              <Link
+                href={`/admin/orcamentos/${orcamento.id}/editar`}
+                className="rounded-lg border border-brand-olive px-4 py-2.5 text-center text-sm font-medium text-brand-olive transition hover:bg-brand-cream/40"
+              >
+                Editar
+              </Link>
+            )}
+          </div>
+          <AcoesPdf orcamentoId={orcamento.id} />
+        </div>
       </div>
-      <p className="mb-6 text-sm text-gray-500">
+      <p className="mb-1 text-sm text-gray-500">
         {formatDate(orcamento.data)} — {resumoTabelas}
       </p>
+      {orcamento.pdfGeradoEm && (
+        <p className="mb-6 text-xs text-gray-400">
+          🔒 PDF já gerado — este orçamento não pode mais ser editado.
+        </p>
+      )}
 
       <section className="mb-6">
         <h2 className="font-heading mb-2 text-lg font-bold text-brand-olive">Cliente</h2>
