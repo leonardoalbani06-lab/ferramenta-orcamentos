@@ -2,10 +2,11 @@
 
 import { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { AuthError } from "next-auth";
 import { db } from "@/lib/db";
 import { signIn, signOut } from "@/auth";
-import { getRepresentanteId } from "@/lib/session";
+import { getRepresentanteId, getRepresentanteLogado } from "@/lib/session";
 
 export async function autenticar(formData: FormData) {
   try {
@@ -95,7 +96,18 @@ export async function criarCliente(formData: FormData) {
   redirect("/clientes");
 }
 
-type ItemInput = { codigo: string; quantidade: number; tabela: string };
+type ItemInput = { codigo: string; quantidade: number; tabela: string; observacao?: string };
+
+// Observação por item: texto livre, mas com um limite de tamanho —
+// evita abuso e mantém o PDF legível (a observação entra na mesma célula
+// da descrição do produto).
+const OBSERVACAO_MAX_LENGTH = 500;
+
+function normalizarObservacao(valor: unknown): string | null {
+  const texto = String(valor ?? "").trim();
+  if (!texto) return null;
+  return texto.slice(0, OBSERVACAO_MAX_LENGTH);
+}
 
 // Mesmas opções mostradas nos <select> do formulário (ver OrcamentoBuilder)
 // — validadas de novo aqui pra não gravar valor arbitrário se o formulário
@@ -161,6 +173,7 @@ export async function criarOrcamento(formData: FormData) {
         valorUnitario,
         ipiPercentual: produto.ipiPercentual ?? 0,
         valorTotal,
+        observacao: normalizarObservacao(i.observacao),
       };
     })
     .filter((i): i is NonNullable<typeof i> => i !== null);
@@ -226,4 +239,46 @@ export async function criarOrcamento(formData: FormData) {
   });
 
   redirect(`/orcamentos/${orcamento.id}`);
+}
+
+// Salva (ou apaga, se vazio) a observação de UM item de um orçamento já
+// criado. Chamada direto de um componente client (modal de observação),
+// não por <form>, então recebe os valores como argumentos normais.
+export async function salvarObservacaoItem(itemId: string, observacaoRaw: string) {
+  const representante = await getRepresentanteLogado();
+  if (!representante) redirect("/");
+
+  const item = await db.itemOrcamento.findUnique({
+    where: { id: itemId },
+    include: { orcamento: true },
+  });
+  if (!item) {
+    throw new Error("Item não encontrado.");
+  }
+
+  // Só o representante dono do orçamento (ou um admin) pode editar —
+  // mesma regra de posse usada no resto do app.
+  const podeEditar =
+    representante.role === "ADMIN" || item.orcamento.representanteId === representante.id;
+  if (!podeEditar) {
+    throw new Error("Você não tem permissão pra editar esse orçamento.");
+  }
+
+  // Trava: depois que o PDF já foi gerado uma vez, a observação não pode
+  // mudar mais — evita divergência entre o que o representante escreveu e
+  // o que já foi entregue/impresso pro cliente (pedido explícito do
+  // usuário, pra não gerar discussão entre representante e quem aprova).
+  if (item.orcamento.pdfGeradoEm) {
+    throw new Error(
+      "Esse orçamento já teve o PDF gerado — a observação não pode mais ser alterada."
+    );
+  }
+
+  await db.itemOrcamento.update({
+    where: { id: itemId },
+    data: { observacao: normalizarObservacao(observacaoRaw) },
+  });
+
+  revalidatePath(`/orcamentos/${item.orcamentoId}`);
+  revalidatePath(`/admin/orcamentos/${item.orcamentoId}`);
 }
