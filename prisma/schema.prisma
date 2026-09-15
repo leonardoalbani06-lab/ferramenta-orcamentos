@@ -141,6 +141,12 @@ model Orcamento {
   emailCopiaPedido   String?
   emailXmlNfe        String?
 
+  // Marca o momento em que o PDF foi gerado pela primeira vez. A partir
+  // daí, as observações por item (ItemOrcamento.observacao) ficam travadas
+  // pra não divergir do que já foi entregue/impresso pro cliente — evita
+  // discussão entre representante e quem aprova o orçamento depois.
+  pdfGeradoEm        DateTime?
+
   criadoEm           DateTime @default(now())
   atualizadoEm       DateTime @updatedAt
 
@@ -168,6 +174,12 @@ model ItemOrcamento {
   valorUnitario  Int      // centavos, snapshot do preço da tabela usada
   ipiPercentual  Float?   @default(0)
   valorTotal     Int      // centavos = quantidade * valorUnitario
+
+  // Observação do representante sobre esse item específico (ex: "produto
+  // sem estoque, prazo maior", "cliente pediu embalagem reforçada"). Some
+  // vazia por padrão; some aparece no PDF junto do item; fica travada
+  // depois que o Orcamento.pdfGeradoEm é preenchido (ver Orcamento acima).
+  observacao     String?
 
   @@index([orcamentoId])
   @@map("itens_orcamento")
