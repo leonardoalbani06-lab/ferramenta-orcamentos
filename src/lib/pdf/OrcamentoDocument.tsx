@@ -287,6 +287,11 @@ export function OrcamentoDocument({ orcamento }: { orcamento: OrcamentoCompleto 
               <View style={styles.tdDescricao}>
                 <Text style={{ fontSize: 6, color: "#555555" }}>Código: {item.produtoCodigo}</Text>
                 <Text style={styles.value}>{item.descricao}</Text>
+                {item.observacao && (
+                  <Text style={{ fontSize: 6, color: "#555555", fontStyle: "italic", marginTop: 1 }}>
+                    Obs.: {item.observacao}
+                  </Text>
+                )}
               </View>
               <Text style={[styles.td, { width: 50 }]}>{item.produto.ncm || "-"}</Text>
               <Text style={[styles.td, { width: 32 }]}>{item.produto.unidade || "-"}</Text>
